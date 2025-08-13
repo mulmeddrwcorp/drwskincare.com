@@ -2,11 +2,36 @@
 @tailwind components;
 @tailwind utilities;
 
-body {
-  font-family: 'Inter', sans-serif;
-  background-color: #f8fafc;
+/* Base styles with light pink gradient background */
+@layer base {
+  body {
+    @apply min-h-screen bg-gradient-to-br from-brand-50 via-rose-50 to-brand-100 text-gray-800 antialiased;
+    background-attachment: fixed;
+  }
 }
 
-.container {
-  max-width: 1200px;
+@layer components {
+  .container {
+    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
+
+  .glass {
+    @apply bg-white/40 backdrop-blur-md border border-white/50 shadow-glass rounded-2xl;
+  }
+
+  .glass-soft {
+    @apply bg-white/30 backdrop-blur-md border border-white/40 shadow-glass rounded-xl;
+  }
+
+  .btn-primary {
+    @apply inline-flex items-center justify-center px-5 py-2.5 rounded-lg bg-gradient-to-r from-brand-500 to-brand-400 text-white font-medium shadow hover:from-brand-600 hover:to-brand-500 transition-colors;
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center px-5 py-2.5 rounded-lg bg-white/50 backdrop-blur-md border border-white/60 text-brand-700 font-medium shadow hover:bg-white/70 transition;
+  }
+
+  .card {
+    @apply glass-soft p-6 hover:shadow-lg transition-shadow;
+  }
 }
