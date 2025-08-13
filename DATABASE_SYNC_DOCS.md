@@ -3,108 +3,49 @@
 ## Overview
 Sistem ini mengelola data resellers dan products dengan sinkronisasi dari API eksternal ke database Neon (PostgreSQL) dan upload gambar ke Vercel Blob storage.
 
-## Database Schema
+## Database Schema (Prisma)
+- `Reseller`: idReseller, namaReseller, nomorHp, area, level, facebook/instagram, fotoProfil, apiData
+- `Product`: idProduk, namaProduk, slug (unique), bpom, level price fields, fotoProduk, gambar, deskripsi, categoryId?, apiData
+- `Category`: name, slug (unique), description
+- `HargaCustom`: relasi reseller↔product + hargaCustom (unique composite key)
 
-### Tables
-1. **resellers** - Data reseller dari API
-2. **products** - Data produk dari API  
-3. **harga_custom** - Harga custom yang diset reseller per produk
-
-### Relasi
-- Reseller → HargaCustom (1:many)
-- Product → HargaCustom (1:many)
-- HargaCustom → Reseller & Product (many:1)
+Migrations menambahkan `slug` ke Product dan tabel `categories` beserta relasinya.
 
 ## API Endpoints
+- `POST /api/sync-data`: Sinkronisasi API eksternal → DB + upload gambar → Blob
+- `GET /api/db-resellers`: Baca reseller dari DB
+- `GET /api/db-products`: Baca produk dari DB (dengan filter & sort)
+- `POST /api/upload-foto`: Upload foto profil reseller
 
-### Sync Data
-- **POST** `/api/sync-data`
-- Sinkronisasi data dari API eksternal ke database
-- Upload gambar ke Blob storage
-- Upsert data (update jika ada, create jika baru)
-
-### Database Queries
-- **GET** `/api/db-resellers` - Data resellers dari database
-- **GET** `/api/db-products` - Data products dari database
-
-### Upload Foto
-- **POST** `/api/upload-foto` - Upload foto profil reseller
+Proxy (untuk debug):
+- `GET /api/products`, `GET /api/resellers`
 
 ## Frontend Pages
+- `/admin/sync`: Panel sinkronisasi manual
+- `/produk`: Daftar produk (filter search/sort/range)
+- `/produk/[slug]`: Detail produk (menampilkan kategori jika tersedia)
+- `/reseller`: Daftar reseller
+- `/reseller/[username]`: Toko reseller; harga sesuai custom price bila ada, tombol “Beli via WA” ke nomor reseller
 
-### Admin Panel
-- `/admin/sync` - Halaman sinkronisasi data
-- Trigger sync manual
-- Monitor hasil sync
-
-### User Pages
-- `/produk` - List produk (dari API)
-- `/reseller` - List reseller (dari API)
-- `/user-profile` - Profil user dengan Clerk
-
-## Environment Variables
-
-### Database (Neon)
-```env
+## Env Vars
+```
 DATABASE_URL=postgres://...
-POSTGRES_PRISMA_URL=postgres://...
-```
-
-### Blob Storage (Vercel)
-```env
 BLOB_READ_WRITE_TOKEN=vercel_blob_rw_...
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_...
+CLERK_SECRET_KEY=sk_...
 ```
 
-### Authentication (Clerk)
-```env
-NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_...
-CLERK_SECRET_KEY=sk_test_...
-```
+## Setup
+1. Install deps: `npm install`
+2. Prisma: `npx prisma migrate deploy && npx prisma generate`
+3. Jalankan dev: `npm run dev`
 
-## Data Flow
+## Notes & Tips
+- Domain gambar diizinkan via `next.config.js` (drwgroup.id dan umum seperti Cloudinary)
+- Detail produk memakai pencarian `slug` dengan fallback ke slug dari `namaProduk` bila Prisma Client belum regenerate
+- ProductCard pada halaman reseller menerima `displayPrice` dan `resellerWhatsappNumber` untuk render harga dan tombol WA
 
-1. **API → Database**: Sync eksternal API ke Neon DB
-2. **Images → Blob**: Upload gambar dari API ke Vercel Blob
-3. **Database → Frontend**: Query data untuk tampilan
-4. **User Upload → Blob**: Upload foto profil user
-
-## Usage Instructions
-
-### 1. Setup Database
-```bash
-npx prisma migrate dev --name init-tables
-npx prisma generate
-```
-
-### 2. Sync Data
-- Akses `/admin/sync`
-- Klik "Start Data Sync"
-- Tunggu proses selesai
-
-### 3. View Data
-- `/produk` - Produk dari API
-- `/reseller` - Reseller dari API
-- API endpoints untuk data dari database
-
-## Features
-
-### Current
-- ✅ Database schema dengan relasi
-- ✅ API sync dari eksternal ke database
-- ✅ Upload gambar ke Blob storage
-- ✅ Admin panel untuk monitoring
-- ✅ Authentication dengan Clerk
-
-### Planned
-- 🔄 Halaman edit harga custom per reseller
-- 🔄 Halaman toko individual per reseller
-- 🔄 Scheduled sync (cron job)
-- 🔄 Dashboard analytics
-- 🔄 Notification system
-
-## Technical Stack
-- **Frontend**: Next.js 15, Tailwind CSS, TypeScript
-- **Database**: Neon (PostgreSQL), Prisma ORM
-- **Storage**: Vercel Blob
-- **Auth**: Clerk
-- **Deployment**: Vercel
+## Troubleshooting
+- Error Prisma arg `slug` unknown: jalankan `npx prisma generate` setelah migrasi
+- Gambar tidak muncul (Next Image): pastikan domain gambar terdaftar di `next.config.js`
+- WA link minus simbol: nomor akan disanitasi menjadi digit-only secara otomatis
