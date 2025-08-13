@@ -31,7 +31,7 @@ export default function ResellerPage() {
         <div className="text-center text-red-500">{error}</div>
       ) : (
         <div className="overflow-x-auto">
-          <table className="min-w-full border rounded-xl bg-white/60 backdrop-blur-md">            <thead>
+          <table className="min-w-full border rounded-xl bg-white/60 backdrop-blur-md"><thead>
               <tr className="bg-brand-100">
                 <th className="px-4 py-2 text-left font-semibold text-brand-700">ID</th>
                 <th className="px-4 py-2 text-left font-semibold text-brand-700">Nama</th>
@@ -39,8 +39,7 @@ export default function ResellerPage() {
                 <th className="px-4 py-2 text-left font-semibold text-brand-700">Daerah</th>
                 <th className="px-4 py-2 text-left font-semibold text-brand-700">Aksi</th>
               </tr>
-            </thead>
-            <tbody>
+            </thead><tbody>
               {resellers.map((reseller, index) => (
                 <tr key={reseller.idReseller || index} className="border-b hover:bg-brand-50/50">
                   <td className="px-4 py-2 text-sm text-brand-800/80">{reseller.idReseller}</td>
@@ -78,8 +77,7 @@ export default function ResellerPage() {
                   </td>
                 </tr>
               ))}
-            </tbody>
-          </table>
+            </tbody></table>
         </div>
       )}
     </div>

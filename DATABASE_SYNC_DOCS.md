@@ -14,7 +14,7 @@ Migrations menambahkan `slug` ke Product dan tabel `categories` beserta relasiny
 ## API Endpoints
 - `POST /api/sync-data`: Sinkronisasi API eksternal → DB + upload gambar → Blob
 - `GET /api/db-resellers`: Baca reseller dari DB
-- `GET /api/db-products`: Baca produk dari DB (dengan filter & sort)
+- `GET /api/db-products`: Baca produk dari DB (dengan filter, sort, dan pagination)
 - `POST /api/upload-foto`: Upload foto profil reseller
 
 Proxy (untuk debug):
@@ -22,7 +22,7 @@ Proxy (untuk debug):
 
 ## Frontend Pages
 - `/admin/sync`: Panel sinkronisasi manual
-- `/produk`: Daftar produk (filter search/sort/range)
+- `/produk`: Server Component; daftar produk dengan pagination via `/api/db-products?page=...&limit=...`
 - `/produk/[slug]`: Detail produk (menampilkan kategori jika tersedia)
 - `/reseller`: Daftar reseller
 - `/reseller/[username]`: Toko reseller; harga sesuai custom price bila ada, tombol “Beli via WA” ke nomor reseller
@@ -41,11 +41,12 @@ CLERK_SECRET_KEY=sk_...
 3. Jalankan dev: `npm run dev`
 
 ## Notes & Tips
-- Domain gambar diizinkan via `next.config.js` (drwgroup.id dan umum seperti Cloudinary)
+- Domain gambar diizinkan via `next.config.js` (drwgroup.id dan umum seperti Cloudinary, Google, serta Vercel Blob subdomains)
 - Detail produk memakai pencarian `slug` dengan fallback ke slug dari `namaProduk` bila Prisma Client belum regenerate
 - ProductCard pada halaman reseller menerima `displayPrice` dan `resellerWhatsappNumber` untuk render harga dan tombol WA
+- Produk page sekarang Server Component dengan `PaginationControls`
 
 ## Troubleshooting
 - Error Prisma arg `slug` unknown: jalankan `npx prisma generate` setelah migrasi
-- Gambar tidak muncul (Next Image): pastikan domain gambar terdaftar di `next.config.js`
+- Gambar tidak muncul (Next Image): pastikan domain gambar terdaftar di `next.config.js` dan restart dev server
 - WA link minus simbol: nomor akan disanitasi menjadi digit-only secara otomatis
