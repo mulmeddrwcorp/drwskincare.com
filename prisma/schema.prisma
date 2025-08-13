@@ -28,10 +28,23 @@ model Reseller {
   @@map("resellers")
 }
 
+model Category {
+  id          String    @id @default(uuid())
+  name        String    @unique
+  slug        String    @unique
+  description String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  products    Product[] // Relasi ke produk
+  
+  @@map("categories")
+}
+
 model Product {
   id              String          @id @default(uuid())
   idProduk        String          @unique // id_produk dari API
   namaProduk      String          // nama_produk dari API
+  slug            String          @unique // URL-friendly slug
   bpom            String?         // bpom dari API
   hargaDirector   Decimal?        // harga_director dari API
   hargaManager    Decimal?        // harga_manager dari API
@@ -41,10 +54,12 @@ model Product {
   fotoProduk      String?         // foto_produk dari API (original)
   gambar          String?         // URL gambar di Blob (processed)
   deskripsi       String?         // deskripsi dari API
+  categoryId      String?         // Relasi ke kategori
   apiData         Json?           // Menyimpan data mentah dari API
   createdAt       DateTime        @default(now())
   updatedAt       DateTime        @updatedAt
   hargaCustom     HargaCustom[]   // Relasi ke harga custom
+  category        Category?       @relation(fields: [categoryId], references: [id])
   
   @@map("products")
 }
