@@ -24,11 +24,35 @@ async function uploadImageToBlob(imageUrl: string, fileName: string): Promise<st
   }
 }
 
-export async function POST() {
+// Handle both GET (from cron) and POST requests
+export async function GET(request: Request) {
+  return handleSync(request);
+}
+
+export async function POST(request: Request) {
+  return handleSync(request);
+}
+
+async function handleSync(request: Request) {
   try {
-    // 1. Sync data resellers
-    console.log('Syncing resellers...');
-    const resellersResponse = await fetch('https://drwgroup.id/apis/reseller/get', {
+    const { searchParams } = new URL(request.url);
+    const syncType = searchParams.get('type'); // 'resellers', 'products', or null for both
+    
+    // Verify authorization for cron jobs
+    const authHeader = request.headers.get('authorization');
+    const expectedSecret = process.env.CRON_SECRET || 'fallback-secret';
+    
+    if (authHeader && !authHeader.includes(expectedSecret)) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    let resellersCount = 0;
+    let productsCount = 0;
+
+    // 1. Sync data resellers (if type is 'resellers' or null)
+    if (!syncType || syncType === 'resellers') {
+      console.log('Syncing resellers...');
+      const resellersResponse = await fetch('https://drwgroup.id/apis/reseller/get', {
       headers: {
         'Authorization': 'Bearer c5d46484b83e6d90d2c55bc7a0ec9782493a1fa2434b66ebed36c3e668f74e89'
       }
