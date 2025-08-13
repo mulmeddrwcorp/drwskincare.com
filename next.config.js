@@ -19,6 +19,8 @@ const nextConfig = {
       { protocol: 'https', hostname: 'res.cloudinary.com', pathname: '/**' },
       { protocol: 'https', hostname: 'lh3.googleusercontent.com', pathname: '/**' },
       { protocol: 'https', hostname: 'public.blob.vercel-storage.com', pathname: '/**' },
+      // Vercel Blob public storage (any project subdomain)
+      { protocol: 'https', hostname: '**.public.blob.vercel-storage.com', pathname: '/**' },
     ],
   },
 };
