@@ -20,6 +20,9 @@ export default function RootLayout({
   return (
     <ClerkProvider localization={{ locale: "id-ID" }}>
       <html lang="id">
+        <head>
+          <link rel="icon" href="/drwskincare-square-logo.ico" type="image/x-icon" />
+        </head>
         <body className={`${inter.className} min-h-screen flex flex-col`}>
           <Header />
           <main className="flex-1">

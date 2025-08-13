@@ -1,0 +1,65 @@
+// Prisma schema for Neon database
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Reseller {
+  id              String          @id @default(uuid())
+  idReseller      String          @unique // id_reseller dari API
+  namaReseller    String          // nama_reseller dari API
+  nomorHp         String          // nomor_hp dari API
+  area            String          // area dari API
+  idUpline        String?         // id_upline dari API
+  level           String          // level dari API
+  facebook        String?         // facebook dari API
+  instagram       String?         // instagram dari API
+  fotoReseller    String?         // foto_reseller dari API (original)
+  fotoProfil      String?         // URL foto profil di Blob (processed)
+  apiData         Json?           // Menyimpan data mentah dari API
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  hargaCustom     HargaCustom[]   // Relasi ke harga custom
+  
+  @@map("resellers")
+}
+
+model Product {
+  id              String          @id @default(uuid())
+  idProduk        String          @unique // id_produk dari API
+  namaProduk      String          // nama_produk dari API
+  bpom            String?         // bpom dari API
+  hargaDirector   Decimal?        // harga_director dari API
+  hargaManager    Decimal?        // harga_manager dari API
+  hargaSupervisor Decimal?        // harga_supervisor dari API
+  hargaConsultant Decimal?        // harga_consultant dari API
+  hargaUmum       Decimal?        // harga_umum dari API
+  fotoProduk      String?         // foto_produk dari API (original)
+  gambar          String?         // URL gambar di Blob (processed)
+  deskripsi       String?         // deskripsi dari API
+  apiData         Json?           // Menyimpan data mentah dari API
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  hargaCustom     HargaCustom[]   // Relasi ke harga custom
+  
+  @@map("products")
+}
+
+model HargaCustom {
+  id          String    @id @default(uuid())
+  resellerId  String
+  productId   String
+  hargaCustom Decimal   // Harga yang diset reseller
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  
+  reseller    Reseller  @relation(fields: [resellerId], references: [id], onDelete: Cascade)
+  product     Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+  
+  @@unique([resellerId, productId]) // Satu reseller hanya bisa set satu harga per produk
+  @@map("harga_custom")
+}

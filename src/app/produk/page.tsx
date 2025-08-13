@@ -9,10 +9,10 @@ export default function ProdukPage() {
   useEffect(() => {
     async function fetchProducts() {
       try {
-        const res = await fetch("/api/products");
+        const res = await fetch("/api/db-products");
         if (!res.ok) throw new Error("Gagal mengambil data produk");
         const data = await res.json();
-  setProducts(Array.isArray(data.data) ? data.data : []);
+        setProducts(Array.isArray(data.data) ? data.data : []);
       } catch (err) {
         setError(err.message || "Terjadi kesalahan");
       } finally {

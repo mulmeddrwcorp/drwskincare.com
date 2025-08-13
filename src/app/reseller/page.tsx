@@ -9,7 +9,7 @@ export default function ResellerPage() {
   useEffect(() => {
     async function fetchResellers() {
       try {
-        const res = await fetch("/api/resellers");
+        const res = await fetch("/api/db-resellers");
         if (!res.ok) throw new Error("Gagal mengambil data reseller");
         const data = await res.json();
         setResellers(Array.isArray(data.data) ? data.data : []);
