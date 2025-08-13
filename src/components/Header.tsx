@@ -15,6 +15,8 @@ export default function Header() {
             </span>
           </Link>
           <nav className="flex items-center gap-3">
+            <Link href="/produk" className="text-brand-700 hover:text-brand-800 font-medium px-3 py-2">Produk</Link>
+            <Link href="/reseller" className="text-brand-700 hover:text-brand-800 font-medium px-3 py-2">Reseller</Link>
             <SignedOut>
               <Link href="/sign-in" className="btn-secondary">Login</Link>
               <Link href="/sign-up" className="btn-primary">Daftar</Link>
