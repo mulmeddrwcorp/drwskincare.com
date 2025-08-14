@@ -2,11 +2,11 @@ import { notFound } from 'next/navigation';
 import Image from 'next/image';
 import { getResellerPublicProfile } from '../../../lib/data';
 
-// TypeScript interface for the params
+// TypeScript interface for the params - Next.js 15 compatibility
 interface ResellerPageProps {
-  params: {
+  params: Promise<{
     username: string;
-  };
+  }>;
 }
 
 // ProductCard component
@@ -137,8 +137,11 @@ function ProductCard({ product, displayPrice, resellerWhatsappNumber }: ProductC
 
 // Server Component untuk halaman profil reseller
 export default async function ResellerProfilePage({ params }: ResellerPageProps) {
+  // Await params before using - Next.js 15 compatibility
+  const { username } = await params;
+  
   // Ambil data profil reseller berdasarkan username
-  const profile = await getResellerPublicProfile(params.username);
+  const profile = await getResellerPublicProfile(username);
 
   // Jika profil tidak ditemukan, panggil notFound()
   if (!profile) {
