@@ -1,1 +1,77 @@
-node_modules
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Next.js
+.next/
+.out/
+.build/
+.vercel/
+.vercel_build_output/
+.next/cache/
+
+# Production
+/build/
+/dist/
+
+# Local env files
+.env
+.env.*.local
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Editor directories and files
+.vscode/
+.idea/
+*.sublime-workspace
+*.sublime-project
+
+# OS files
+.DS_Store
+Thumbs.db
+ehthumbs.db
+
+# TypeScript
+*.tsbuildinfo
+tsconfig.tsbuildinfo
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+
+# Test coverage
+coverage/
+
+# Prisma
+# keep migrations and schema, ignore generated client output if present
+/prisma/client/
+
+# Vercel Blob / uploads (if any local cache)
+.vercel_storage/
+
+# Temporary files
+*.tmp
+*.temp
+
+# Build artifacts
+dist/
+build/
+
+# JetBrains
+.idea/
+
+# Mac
+*.DS_Store
+
+# Windows
+Thumbs.db
+
+# Others
+*.cache
