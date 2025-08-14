@@ -14,9 +14,10 @@ interface ProductCardProps {
   product: any;
   displayPrice: number | null;
   resellerWhatsappNumber?: string;
+  resellerId: string; // Add resellerId prop
 }
 
-function ProductCard({ product, displayPrice, resellerWhatsappNumber }: ProductCardProps) {
+function ProductCard({ product, displayPrice, resellerWhatsappNumber, resellerId }: ProductCardProps) {
   // Format harga ke Rupiah
   const formatPrice = (price: number | null) => {
     if (!price) return 'Harga tidak tersedia';
@@ -44,6 +45,11 @@ function ProductCard({ product, displayPrice, resellerWhatsappNumber }: ProductC
   const whatsappUrl = resellerWhatsappNumber 
     ? `https://wa.me/${resellerWhatsappNumber.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(whatsappMessage)}`
     : '#';
+  
+  // Create tracking URL for analytics
+  const trackingUrl = resellerWhatsappNumber 
+    ? `/api/track-click?resellerId=${resellerId}&productId=${product.id}&redirectTo=${encodeURIComponent(whatsappUrl)}`
+    : '#';
 
   return (
     <div className="card group relative overflow-hidden">
@@ -51,10 +57,10 @@ function ProductCard({ product, displayPrice, resellerWhatsappNumber }: ProductC
       <div className="relative z-10 p-6">
         <div className="flex flex-col items-center gap-4">
           {/* Product Image */}
-          {product.fotoProduk ? (
+          {product.gambar ? (
             <div className="relative w-32 h-32 rounded-xl overflow-hidden shadow-md">
               <Image
-                src={String(product.fotoProduk).replace(/\\/g, "")}
+                src={product.gambar}
                 alt={product.namaProduk}
                 fill
                 className="object-cover group-hover:scale-105 transition-transform duration-200"
@@ -115,7 +121,7 @@ function ProductCard({ product, displayPrice, resellerWhatsappNumber }: ProductC
               
               {resellerWhatsappNumber && (
                 <a 
-                  href={whatsappUrl}
+                  href={trackingUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label={`Beli ${product.namaProduk} via WhatsApp`}
@@ -264,6 +270,7 @@ export default async function ResellerProfilePage({ params }: ResellerPageProps)
                   product={product}
                   displayPrice={displayPrice}
                   resellerWhatsappNumber={reseller.nomorHp}
+                  resellerId={reseller.id}
                 />
               );
             })}

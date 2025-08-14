@@ -24,6 +24,7 @@ model Reseller {
   createdAt       DateTime        @default(now())
   updatedAt       DateTime        @updatedAt
   hargaCustom     HargaCustom[]   // Relasi ke harga custom
+  clickLogs       ClickLog[]      // Relasi ke click logs
   
   @@map("resellers")
 }
@@ -77,4 +78,15 @@ model HargaCustom {
   
   @@unique([resellerId, productId]) // Satu reseller hanya bisa set satu harga per produk
   @@map("harga_custom")
+}
+
+model ClickLog {
+  id          String    @id @default(cuid())
+  createdAt   DateTime  @default(now())
+  resellerId  String
+  productId   String?   // Opsional
+  
+  reseller    Reseller  @relation(fields: [resellerId], references: [id], onDelete: Cascade)
+  
+  @@map("click_logs")
 }

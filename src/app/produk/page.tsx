@@ -45,9 +45,9 @@ function ProductCard({ product }: { product: any }) {
       <div className="absolute inset-0 bg-gradient-to-br from-brand-400/20 to-brand-200/10 opacity-0 group-hover:opacity-100 transition" />
       <div className="relative z-10 p-6">
         <div className="flex flex-col items-center justify-center gap-4">
-          {product.fotoProduk && (
+          {product.gambar && (
             <Image
-              src={String(product.fotoProduk).replace(/\\/g, '')}
+              src={String(product.gambar).replace(/\\/g, '')}
               alt={product.namaProduk}
               width={128}
               height={128}
@@ -89,7 +89,8 @@ function ProductCard({ product }: { product: any }) {
 
 export default async function ProdukPage({ searchParams }: ProdukPageProps) {
   // 1-2. Determine currentPage
-  const rawPage = (searchParams?.page ?? '1');
+  const awaitedSearchParams = await searchParams;
+  const rawPage = (awaitedSearchParams?.page ?? '1');
   const currentPage = Array.isArray(rawPage) ? parseInt(rawPage[0] || '1', 10) : parseInt(rawPage as string, 10) || 1;
   const page = Number.isNaN(currentPage) || currentPage < 1 ? 1 : currentPage;
   const limit = 12;

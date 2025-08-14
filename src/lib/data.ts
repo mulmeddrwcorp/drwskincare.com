@@ -1,4 +1,5 @@
 import { PrismaClient } from '@prisma/client';
+import { auth } from '@clerk/nextjs/server';
 
 const prisma = new PrismaClient();
 
@@ -76,10 +77,67 @@ export async function getProductBySlug(slug: string) {
 }
 
 /**
- * Mendapatkan profil publik reseller berdasarkan username/idReseller
- * @param username - ID reseller atau username reseller
- * @returns Object berisi reseller, products, dan customPrices atau null jika tidak ditemukan
+ * Mendapatkan data dashboard untuk reseller yang sedang login
+ * @returns Object berisi reseller dan analytics atau null jika tidak ditemukan
  */
+export async function getResellerDashboardData() {
+  try {
+    // 1. Gunakan auth() untuk mendapatkan userId dari sesi yang sedang login
+    const { userId } = await auth();
+    
+    if (!userId) {
+      throw new Error('User not authenticated');
+    }
+
+    // 2. Gunakan userId untuk mengambil data reseller dari database
+    const reseller = await prisma.reseller.findUnique({
+      where: {
+        idReseller: userId // Assuming userId corresponds to idReseller
+      },
+      select: {
+        id: true,
+        idReseller: true,
+        namaReseller: true,
+        nomorHp: true,
+        area: true,
+        level: true,
+        facebook: true,
+        instagram: true,
+        fotoProfil: true,
+        createdAt: true,
+        updatedAt: true,
+      }
+    });
+
+    if (!reseller) {
+      return null;
+    }
+
+    // 3. Query untuk menghitung totalClicks dari tabel ClickLog
+    let totalClicks = 0;
+    try {
+      const clickLogCount = await prisma.clickLog.count({
+        where: {
+          resellerId: reseller.id
+        }
+      });
+      totalClicks = clickLogCount;
+    } catch (error) {
+      console.warn('Error counting click logs:', error);
+      totalClicks = 0;
+    }
+
+    // 4. Kembalikan objek yang berisi reseller dan totalClicks
+    return {
+      reseller,
+      totalClicks
+    };
+
+  } catch (error) {
+    console.error('Error fetching reseller dashboard data:', error);
+    return null;
+  }
+}
 export async function getResellerPublicProfile(username: string): Promise<ResellerPublicProfile | null> {
   try {
     // 1. Cari reseller berdasarkan idReseller (username)
