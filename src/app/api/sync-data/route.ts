@@ -62,65 +62,33 @@ async function handleSync(request: Request) {
 
       if (resellersData.data) {
         resellersCount = Array.isArray(resellersData.data) ? resellersData.data.length : 0;
-        for (const reseller of resellersData.data) {
-          // Upload foto reseller jika ada
-          let fotoProfil = null;
-          if (reseller.foto_reseller) {
-            fotoProfil = await uploadImageToBlob(
-              reseller.foto_reseller, 
-              `reseller-${reseller.id_reseller}-profile.jpg`
-            );
-          }
-
+        
+        // 2. Loop through each reseller from API
+        for (const resellerFromApi of resellersData.data) {
+          // 3. Upsert reseller data - only core Reseller fields
           await prisma.reseller.upsert({
-            where: { apiResellerId: reseller.id_reseller },
-            update: {
-              namaReseller: reseller.nama_reseller,
-              nomorHp: reseller.nomor_hp,
-              area: reseller.area,
-              idUpline: reseller.id_upline,
-              level: reseller.level,
-              email: reseller.email || null,
-              apiData: reseller,
-              updatedAt: new Date(),
-              // Update profile data
-              profile: {
-                upsert: {
-                  create: {
-                    displayName: reseller.nama_reseller,
-                    whatsappNumber: reseller.nomor_hp,
-                    facebook: reseller.facebook,
-                    instagram: reseller.instagram,
-                    photoUrl: fotoProfil,
-                  },
-                  update: {
-                    facebook: reseller.facebook,
-                    instagram: reseller.instagram,
-                    photoUrl: fotoProfil,
-                    updatedAt: new Date(),
-                  }
-                }
-              }
+            where: { 
+              apiResellerId: resellerFromApi.id_reseller 
             },
             create: {
-              apiResellerId: reseller.id_reseller,
-              namaReseller: reseller.nama_reseller,
-              nomorHp: reseller.nomor_hp,
-              area: reseller.area,
-              idUpline: reseller.id_upline,
-              level: reseller.level,
-              email: reseller.email || null,
-              apiData: reseller,
-              // Create initial profile
-              profile: {
-                create: {
-                  displayName: reseller.nama_reseller,
-                  whatsappNumber: reseller.nomor_hp,
-                  facebook: reseller.facebook,
-                  instagram: reseller.instagram,
-                  photoUrl: fotoProfil,
-                }
-              }
+              apiResellerId: resellerFromApi.id_reseller,
+              namaReseller: resellerFromApi.nama_reseller,
+              nomorHp: resellerFromApi.nomor_hp,
+              area: resellerFromApi.area,
+              level: resellerFromApi.level,
+              email: resellerFromApi.email || null,
+              status: resellerFromApi.status || 'active',
+              apiData: resellerFromApi,
+            },
+            update: {
+              namaReseller: resellerFromApi.nama_reseller,
+              nomorHp: resellerFromApi.nomor_hp,
+              area: resellerFromApi.area,
+              level: resellerFromApi.level,
+              email: resellerFromApi.email || null,
+              status: resellerFromApi.status || 'active',
+              apiData: resellerFromApi,
+              updatedAt: new Date(),
             },
           });
         }
