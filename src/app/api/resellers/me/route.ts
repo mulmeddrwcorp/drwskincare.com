@@ -28,31 +28,52 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    // 3. Update data reseller menggunakan Prisma
+    // 3. Update data reseller profile (data yang bisa diedit pengguna)
     const updatedReseller = await prisma.reseller.update({
       where: { 
-        idReseller: userId // Pastikan reseller hanya bisa update datanya sendiri
+        apiResellerId: userId // Pastikan reseller hanya bisa update datanya sendiri
       },
       data: {
-        namaReseller: name,
-        area: city,
-        nomorHp: whatsappNumber || undefined,
-        facebook: facebook || undefined,
-        instagram: instagram || undefined,
         updatedAt: new Date(),
+        profile: {
+          upsert: {
+            create: {
+              displayName: name,
+              city: city,
+              whatsappNumber: whatsappNumber || undefined,
+              facebook: facebook || undefined,
+              instagram: instagram || undefined,
+            },
+            update: {
+              displayName: name,
+              city: city,
+              whatsappNumber: whatsappNumber || undefined,
+              facebook: facebook || undefined,
+              instagram: instagram || undefined,
+              updatedAt: new Date(),
+            }
+          }
+        }
       },
       select: {
         id: true,
-        idReseller: true,
+        apiResellerId: true,
         namaReseller: true,
         nomorHp: true,
         area: true,
         level: true,
-        facebook: true,
-        instagram: true,
-        fotoProfil: true,
-        createdAt: true,
-        updatedAt: true,
+        status: true,
+        profile: {
+          select: {
+            displayName: true,
+            whatsappNumber: true,
+            city: true,
+            facebook: true,
+            instagram: true,
+            photoUrl: true,
+            bio: true,
+          }
+        }
       }
     });
 
@@ -98,20 +119,32 @@ export async function GET() {
 
     const reseller = await prisma.reseller.findUnique({
       where: { 
-        idReseller: userId 
+        apiResellerId: userId 
       },
       select: {
         id: true,
-        idReseller: true,
+        apiResellerId: true,
         namaReseller: true,
         nomorHp: true,
         area: true,
         level: true,
-        facebook: true,
-        instagram: true,
-        fotoProfil: true,
+        status: true,
         createdAt: true,
         updatedAt: true,
+        profile: {
+          select: {
+            id: true,
+            displayName: true,
+            whatsappNumber: true,
+            photoUrl: true,
+            city: true,
+            bio: true,
+            facebook: true,
+            instagram: true,
+            isPublic: true,
+            customSlug: true,
+          }
+        }
       }
     });
 

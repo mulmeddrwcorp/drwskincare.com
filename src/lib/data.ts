@@ -7,15 +7,25 @@ const prisma = new PrismaClient();
 export interface ResellerPublicProfile {
   reseller: {
     id: string;
-    idReseller: string;
+    apiResellerId: string;
     namaReseller: string;
     nomorHp: string;
     area: string;
     level: string;
-    facebook: string | null;
-    instagram: string | null;
-    fotoProfil: string | null;
+    status: string;
     createdAt: Date;
+    profile?: {
+      id: string;
+      displayName: string | null;
+      whatsappNumber: string | null;
+      photoUrl: string | null;
+      city: string | null;
+      bio: string | null;
+      facebook: string | null;
+      instagram: string | null;
+      isPublic: boolean;
+      customSlug: string | null;
+    } | null;
   };
   products: Array<any>; // Complete product objects
   customPrices: Array<{
@@ -28,7 +38,7 @@ export interface ResellerPublicProfile {
     product: {
       id: string;
       namaProduk: string;
-      fotoProduk: string | null;
+      gambar: string | null;
     };
   }>;
 }
@@ -92,20 +102,32 @@ export async function getResellerDashboardData() {
     // 2. Gunakan userId untuk mengambil data reseller dari database
     const reseller = await prisma.reseller.findUnique({
       where: {
-        idReseller: userId // Assuming userId corresponds to idReseller
+        apiResellerId: userId // Assuming userId corresponds to apiResellerId
       },
       select: {
         id: true,
-        idReseller: true,
+        apiResellerId: true,
         namaReseller: true,
         nomorHp: true,
         area: true,
         level: true,
-        facebook: true,
-        instagram: true,
-        fotoProfil: true,
+        status: true,
         createdAt: true,
         updatedAt: true,
+        profile: {
+          select: {
+            id: true,
+            displayName: true,
+            whatsappNumber: true,
+            photoUrl: true,
+            city: true,
+            bio: true,
+            facebook: true,
+            instagram: true,
+            isPublic: true,
+            customSlug: true,
+          }
+        }
       }
     });
 
@@ -140,29 +162,42 @@ export async function getResellerDashboardData() {
 }
 export async function getResellerPublicProfile(username: string): Promise<ResellerPublicProfile | null> {
   try {
-    // 1. Cari reseller berdasarkan idReseller (username)
-    // Pilih hanya field yang bersifat publik
-    const reseller = await prisma.reseller.findUnique({
+    // 1. Cari reseller berdasarkan apiResellerId (username) atau customSlug di profile
+    const reseller = await prisma.reseller.findFirst({
       where: {
-        idReseller: username
+        OR: [
+          { apiResellerId: username },
+          { profile: { customSlug: username } }
+        ]
       },
       select: {
         id: true,
-        idReseller: true,
+        apiResellerId: true,
         namaReseller: true,
-        nomorHp: true, // Include for WhatsApp contact
+        nomorHp: true,
         area: true,
         level: true,
-        facebook: true,
-        instagram: true,
-        fotoProfil: true,
+        status: true,
         createdAt: true,
-        // Exclude sensitive data like apiData, etc.
+        profile: {
+          select: {
+            id: true,
+            displayName: true,
+            whatsappNumber: true,
+            photoUrl: true,
+            city: true,
+            bio: true,
+            facebook: true,
+            instagram: true,
+            isPublic: true,
+            customSlug: true,
+          }
+        }
       }
     });
 
-    // Jika reseller tidak ditemukan, kembalikan null
-    if (!reseller) {
+    // Jika reseller tidak ditemukan atau profil tidak public, kembalikan null
+    if (!reseller || (reseller.profile && !reseller.profile.isPublic)) {
       return null;
     }
 
@@ -183,7 +218,7 @@ export async function getResellerPublicProfile(username: string): Promise<Resell
           select: {
             id: true,
             namaProduk: true,
-            fotoProduk: true
+            gambar: true
           }
         }
       },

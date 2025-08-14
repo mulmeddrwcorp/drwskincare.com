@@ -55,9 +55,9 @@ export default async function DashboardPage() {
               <div className="flex flex-col items-center text-center">
                 {/* Foto Profil */}
                 <div className="w-24 h-24 rounded-full overflow-hidden bg-gray-200 mb-4">
-                  {reseller.fotoProfil ? (
+                  {reseller.profile?.photoUrl ? (
                     <Image
-                      src={reseller.fotoProfil}
+                      src={reseller.profile.photoUrl}
                       alt={reseller.namaReseller}
                       width={96}
                       height={96}
@@ -74,7 +74,7 @@ export default async function DashboardPage() {
                 
                 {/* Info Profil */}
                 <h3 className="text-lg font-medium text-gray-900 mb-1">{reseller.namaReseller}</h3>
-                <p className="text-sm text-gray-600 mb-1">ID: {reseller.idReseller}</p>
+                <p className="text-sm text-gray-600 mb-1">ID: {reseller.apiResellerId}</p>
                 <p className="text-sm text-gray-600 mb-1">Level: {reseller.level}</p>
                 <p className="text-sm text-gray-600 mb-4">Area: {reseller.area}</p>
                 
@@ -153,7 +153,7 @@ export default async function DashboardPage() {
 
                 {/* Lihat Halaman Toko */}
                 <Link
-                  href={`/reseller/${reseller.idReseller}`}
+                  href={`/reseller/${reseller.apiResellerId}`}
                   target="_blank"
                   className="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
                 >
