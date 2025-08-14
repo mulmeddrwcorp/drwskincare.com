@@ -16,10 +16,14 @@ export async function POST(request: Request) {
   // Upload ke Vercel Blob
   const blob = await put(file.name, file, { access: 'public' });
 
-  // Simpan URL ke database Neon
-  await prisma.reseller.update({
-    where: { id: resellerId },
-    data: { fotoProfil: blob.url },
+  // Simpan URL ke database Neon - update ResellerProfile
+  await prisma.resellerProfile.upsert({
+    where: { resellerId: resellerId },
+    update: { photoUrl: blob.url },
+    create: { 
+      resellerId: resellerId,
+      photoUrl: blob.url 
+    },
   });
 
   return NextResponse.json({ url: blob.url });

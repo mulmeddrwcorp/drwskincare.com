@@ -164,10 +164,10 @@ export default async function ResellerProfilePage({ params }: ResellerPageProps)
           <div className="flex flex-col md:flex-row items-center gap-8">
             {/* Foto Profil */}
             <div className="relative">
-              {reseller.fotoProfil ? (
+              {reseller.profile?.photoUrl ? (
                 <div className="relative w-32 h-32 md:w-40 md:h-40 rounded-full overflow-hidden border-4 border-white/20 shadow-xl">
                   <Image
-                    src={reseller.fotoProfil}
+                    src={reseller.profile.photoUrl}
                     alt={reseller.namaReseller}
                     fill
                     className="object-cover"
@@ -205,9 +205,9 @@ export default async function ResellerProfilePage({ params }: ResellerPageProps)
 
               {/* Social Media Links */}
               <div className="flex items-center justify-center md:justify-start gap-4">
-                {reseller.facebook && (
+                {reseller.profile?.facebook && (
                   <a 
-                    href={reseller.facebook}
+                    href={reseller.profile.facebook}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center hover:bg-white/30 transition-colors"
@@ -218,9 +218,9 @@ export default async function ResellerProfilePage({ params }: ResellerPageProps)
                   </a>
                 )}
                 
-                {reseller.instagram && (
+                {reseller.profile?.instagram && (
                   <a 
-                    href={reseller.instagram}
+                    href={reseller.profile.instagram}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center hover:bg-white/30 transition-colors"

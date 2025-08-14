@@ -1,92 +1,111 @@
-// Prisma schema for Neon database
+generator client {
+  provider = "prisma-client-js"
+}
+
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
-generator client {
-  provider = "prisma-client-js"
-}
-
 model Reseller {
-  id              String          @id @default(uuid())
-  idReseller      String          @unique // id_reseller dari API
-  namaReseller    String          // nama_reseller dari API
-  nomorHp         String          // nomor_hp dari API
-  area            String          // area dari API
-  idUpline        String?         // id_upline dari API
-  level           String          // level dari API
-  facebook        String?         // facebook dari API
-  instagram       String?         // instagram dari API
-  fotoReseller    String?         // foto_reseller dari API (original)
-  fotoProfil      String?         // URL foto profil di Blob (processed)
-  apiData         Json?           // Menyimpan data mentah dari API
-  createdAt       DateTime        @default(now())
-  updatedAt       DateTime        @updatedAt
-  hargaCustom     HargaCustom[]   // Relasi ke harga custom
-  clickLogs       ClickLog[]      // Relasi ke click logs
-  
+  id            String           @id @default(cuid())
+  apiData       Json?
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+  area          String
+  idUpline      String?
+  level         String
+  namaReseller  String
+  nomorHp       String
+  apiResellerId String           @unique
+  email         String?
+  joinDate      DateTime         @default(now())
+  status        String           @default("active")
+  clickLogs     ClickLog[]
+  hargaCustom   HargaCustom[]
+  profile       ResellerProfile?
+
   @@map("resellers")
 }
 
+model ResellerProfile {
+  id             String   @id @default(cuid())
+  displayName    String?
+  whatsappNumber String?
+  photoUrl       String?
+  city           String?
+  bio            String?
+  facebook       String?
+  instagram      String?
+  isPublic       Boolean  @default(true)
+  customSlug     String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  resellerId     String   @unique
+  reseller       Reseller @relation(fields: [resellerId], references: [id], onDelete: Cascade)
+
+  @@map("reseller_profiles")
+}
+
 model Category {
-  id          String    @id @default(uuid())
+  id          String    @id @default(cuid())
   name        String    @unique
   slug        String    @unique
   description String?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
-  products    Product[] // Relasi ke produk
-  
+  products    Product[]
+
   @@map("categories")
 }
 
 model Product {
-  id              String          @id @default(uuid())
-  idProduk        String          @unique // id_produk dari API
-  namaProduk      String          // nama_produk dari API
-  slug            String          @unique // URL-friendly slug
-  bpom            String?         // bpom dari API
-  hargaDirector   Decimal?        // harga_director dari API
-  hargaManager    Decimal?        // harga_manager dari API
-  hargaSupervisor Decimal?        // harga_supervisor dari API
-  hargaConsultant Decimal?        // harga_consultant dari API
-  hargaUmum       Decimal?        // harga_umum dari API
-  fotoProduk      String?         // foto_produk dari API (original)
-  gambar          String?         // URL gambar di Blob (processed)
-  deskripsi       String?         // deskripsi dari API
-  categoryId      String?         // Relasi ke kategori
-  apiData         Json?           // Menyimpan data mentah dari API
-  createdAt       DateTime        @default(now())
-  updatedAt       DateTime        @updatedAt
-  hargaCustom     HargaCustom[]   // Relasi ke harga custom
-  category        Category?       @relation(fields: [categoryId], references: [id])
-  
+  id              String        @id @default(cuid())
+  deskripsi       String?
+  gambar          String?
+  apiData         Json?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  bpom            String?
+  fotoProduk      String?
+  hargaConsultant Decimal?
+  hargaDirector   Decimal?
+  hargaManager    Decimal?
+  hargaSupervisor Decimal?
+  hargaUmum       Decimal?
+  idProduk        String        @unique
+  namaProduk      String
+  categoryId      String?
+  slug            String        @unique
+  hargaCustom     HargaCustom[]
+  category        Category?     @relation(fields: [categoryId], references: [id])
+
   @@map("products")
 }
 
 model HargaCustom {
-  id          String    @id @default(uuid())
+  id          String   @id @default(cuid())
   resellerId  String
   productId   String
-  hargaCustom Decimal   // Harga yang diset reseller
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  
-  reseller    Reseller  @relation(fields: [resellerId], references: [id], onDelete: Cascade)
-  product     Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
-  
-  @@unique([resellerId, productId]) // Satu reseller hanya bisa set satu harga per produk
+  hargaCustom Decimal
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  product     Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  reseller    Reseller @relation(fields: [resellerId], references: [id], onDelete: Cascade)
+
+  @@unique([resellerId, productId])
   @@map("harga_custom")
 }
 
 model ClickLog {
-  id          String    @id @default(cuid())
-  createdAt   DateTime  @default(now())
-  resellerId  String
-  productId   String?   // Opsional
-  
-  reseller    Reseller  @relation(fields: [resellerId], references: [id], onDelete: Cascade)
-  
+  id         String   @id @default(cuid())
+  createdAt  DateTime @default(now())
+  resellerId String
+  productId  String?
+  ipAddress  String?
+  referrer   String?
+  userAgent  String?
+  reseller   Reseller @relation(fields: [resellerId], references: [id], onDelete: Cascade)
+
   @@map("click_logs")
 }

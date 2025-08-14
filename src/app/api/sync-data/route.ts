@@ -73,32 +73,54 @@ async function handleSync(request: Request) {
           }
 
           await prisma.reseller.upsert({
-            where: { idReseller: reseller.id_reseller },
+            where: { apiResellerId: reseller.id_reseller },
             update: {
               namaReseller: reseller.nama_reseller,
               nomorHp: reseller.nomor_hp,
               area: reseller.area,
               idUpline: reseller.id_upline,
               level: reseller.level,
-              facebook: reseller.facebook,
-              instagram: reseller.instagram,
-              fotoReseller: reseller.foto_reseller,
-              fotoProfil: fotoProfil,
+              email: reseller.email || null,
               apiData: reseller,
               updatedAt: new Date(),
+              // Update profile data
+              profile: {
+                upsert: {
+                  create: {
+                    displayName: reseller.nama_reseller,
+                    whatsappNumber: reseller.nomor_hp,
+                    facebook: reseller.facebook,
+                    instagram: reseller.instagram,
+                    photoUrl: fotoProfil,
+                  },
+                  update: {
+                    facebook: reseller.facebook,
+                    instagram: reseller.instagram,
+                    photoUrl: fotoProfil,
+                    updatedAt: new Date(),
+                  }
+                }
+              }
             },
             create: {
-              idReseller: reseller.id_reseller,
+              apiResellerId: reseller.id_reseller,
               namaReseller: reseller.nama_reseller,
               nomorHp: reseller.nomor_hp,
               area: reseller.area,
               idUpline: reseller.id_upline,
               level: reseller.level,
-              facebook: reseller.facebook,
-              instagram: reseller.instagram,
-              fotoReseller: reseller.foto_reseller,
-              fotoProfil: fotoProfil,
+              email: reseller.email || null,
               apiData: reseller,
+              // Create initial profile
+              profile: {
+                create: {
+                  displayName: reseller.nama_reseller,
+                  whatsappNumber: reseller.nomor_hp,
+                  facebook: reseller.facebook,
+                  instagram: reseller.instagram,
+                  photoUrl: fotoProfil,
+                }
+              }
             },
           });
         }
