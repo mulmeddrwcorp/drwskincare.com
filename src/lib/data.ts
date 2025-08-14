@@ -162,37 +162,13 @@ export async function getResellerDashboardData() {
 }
 export async function getResellerPublicProfile(username: string): Promise<ResellerPublicProfile | null> {
   try {
-    // 1. Cari reseller berdasarkan apiResellerId (username) atau customSlug di profile
-    const reseller = await prisma.reseller.findFirst({
+    // 1. Cari reseller berdasarkan apiResellerId (username) dengan include profile
+    const reseller = await prisma.reseller.findUnique({
       where: {
-        OR: [
-          { apiResellerId: username },
-          { profile: { customSlug: username } }
-        ]
+        apiResellerId: username
       },
-      select: {
-        id: true,
-        apiResellerId: true,
-        namaReseller: true,
-        nomorHp: true,
-        area: true,
-        level: true,
-        status: true,
-        createdAt: true,
-        profile: {
-          select: {
-            id: true,
-            displayName: true,
-            whatsappNumber: true,
-            photoUrl: true,
-            city: true,
-            bio: true,
-            facebook: true,
-            instagram: true,
-            isPublic: true,
-            customSlug: true,
-          }
-        }
+      include: {
+        profile: true // Mengambil data ResellerProfile yang terhubung
       }
     });
 
