@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
+import { createSlug } from '../../../lib/data';
 import { put } from '@vercel/blob';
 
 const prisma = new PrismaClient();
@@ -155,6 +156,7 @@ async function handleSync(request: Request) {
               gambar: gambar,
               deskripsi: product.deskripsi,
               apiData: product,
+              slug: product.slug || createSlug(product.nama_produk),
             },
           });
         }
