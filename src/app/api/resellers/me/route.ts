@@ -18,88 +18,57 @@ export async function PUT(request: NextRequest) {
 
     // 2. Ambil data dari body request
     const body = await request.json();
-    const { name, city, whatsappNumber, facebook, instagram } = body;
+    const { displayName, city, whatsappNumber, facebook, instagram, bio, photoUrl, isPublic, customSlug } = body;
 
-    // Validasi data yang diperlukan
-    if (!name || !city) {
-      return NextResponse.json(
-        { error: 'Name and city are required fields' },
-        { status: 400 }
-      );
-    }
-
-    // 3. Update data reseller profile (data yang bisa diedit pengguna)
-    const updatedReseller = await prisma.reseller.update({
+    // 3. Gunakan prisma.resellerProfile.upsert() untuk membuat atau mengupdate profil
+    const updatedProfile = await prisma.resellerProfile.upsert({
       where: { 
-        apiResellerId: userId // Pastikan reseller hanya bisa update datanya sendiri
+        resellerId: userId // Kunci relasi yang unik
       },
-      data: {
+      create: {
+        resellerId: userId, // Wajib untuk membuat relasi
+        displayName: displayName || null,
+        city: city || null,
+        whatsappNumber: whatsappNumber || null,
+        facebook: facebook || null,
+        instagram: instagram || null,
+        bio: bio || null,
+        photoUrl: photoUrl || null,
+        isPublic: isPublic !== undefined ? isPublic : true,
+        customSlug: customSlug || null,
+      },
+      update: {
+        displayName: displayName || null,
+        city: city || null,
+        whatsappNumber: whatsappNumber || null,
+        facebook: facebook || null,
+        instagram: instagram || null,
+        bio: bio || null,
+        photoUrl: photoUrl || null,
+        isPublic: isPublic !== undefined ? isPublic : undefined,
+        customSlug: customSlug || null,
         updatedAt: new Date(),
-        profile: {
-          upsert: {
-            create: {
-              displayName: name,
-              city: city,
-              whatsappNumber: whatsappNumber || undefined,
-              facebook: facebook || undefined,
-              instagram: instagram || undefined,
-            },
-            update: {
-              displayName: name,
-              city: city,
-              whatsappNumber: whatsappNumber || undefined,
-              facebook: facebook || undefined,
-              instagram: instagram || undefined,
-              updatedAt: new Date(),
-            }
-          }
-        }
-      },
-      select: {
-        id: true,
-        apiResellerId: true,
-        namaReseller: true,
-        nomorHp: true,
-        area: true,
-        level: true,
-        status: true,
-        profile: {
-          select: {
-            displayName: true,
-            whatsappNumber: true,
-            city: true,
-            facebook: true,
-            instagram: true,
-            photoUrl: true,
-            bio: true,
-          }
-        }
       }
     });
 
-    // 4. Kembalikan respons JSON dengan data yang sudah terupdate
+    // 4. Kembalikan data profil yang baru diupdate sebagai respons JSON
     return NextResponse.json(
       { 
         message: 'Profile updated successfully',
-        reseller: updatedReseller 
+        profile: updatedProfile 
       },
       { status: 200 }
     );
 
   } catch (error) {
-    // 5. Handle error
+    // 5. Error handling
     console.error('Error updating reseller profile:', error);
     
-    // Check if it's a Prisma error (reseller not found)
-    if (error instanceof Error && error.message.includes('Record to update not found')) {
-      return NextResponse.json(
-        { error: 'Reseller profile not found' },
-        { status: 404 }
-      );
-    }
-
     return NextResponse.json(
-      { error: 'Internal server error', details: error instanceof Error ? error.message : 'Unknown error' },
+      { 
+        error: 'Internal server error', 
+        details: error instanceof Error ? error.message : 'Unknown error' 
+      },
       { status: 500 }
     );
   }
