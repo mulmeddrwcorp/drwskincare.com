@@ -37,7 +37,7 @@ export interface ResellerPublicProfile {
  * @param name - Product name
  * @returns URL-friendly slug
  */
-function createSlug(name: string): string {
+export function createSlug(name: string): string {
   return name
     .toLowerCase()
     .replace(/[^a-z0-9\s-]/g, '') // Remove special characters
