@@ -2,11 +2,11 @@ import { notFound } from 'next/navigation';
 import Image from 'next/image';
 import { getProductBySlug } from '../../../lib/data';
 
-// TypeScript interface for the params
+// TypeScript interface for the params - Next.js 15 compatibility
 interface ProductPageProps {
-  params: {
+  params: Promise<{
     slug: string;
-  };
+  }>;
 }
 
 // Server Component untuk halaman detail produk
