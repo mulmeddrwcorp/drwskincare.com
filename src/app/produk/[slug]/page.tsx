@@ -54,9 +54,9 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
         <div className="lg:col-span-2">
           <div className="sticky top-8">
             <div className="relative aspect-square rounded-2xl overflow-hidden bg-white shadow-lg">
-              {product.fotoProduk ? (
+              {product.gambar ? (
                 <Image
-                  src={product.fotoProduk.replace(/\\/g, "")}
+                  src={product.gambar.replace(/\\/g, "")}
                   alt={product.namaProduk}
                   fill
                   className="object-cover"
@@ -222,14 +222,14 @@ export async function generateMetadata({ params }: ProductPageProps) {
     keywords: `${product.namaProduk}, ${product?.category?.name ? product.category.name + ', ' : ''}skincare, kecantikan, BPOM, DRW Skincare`,    openGraph: {
       title: product.namaProduk,
       description: description,
-      images: product.fotoProduk ? [product.fotoProduk.replace(/\\/g, "")] : [],
+      images: product.gambar ? [product.gambar.replace(/\\/g, "")] : [],
       type: 'website',
     },
     twitter: {
       card: 'summary_large_image',
       title: product.namaProduk,
       description: description,
-      images: product.fotoProduk ? [product.fotoProduk.replace(/\\/g, "")] : [],
+      images: product.gambar ? [product.gambar.replace(/\\/g, "")] : [],
     }
   };
 }
