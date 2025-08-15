@@ -101,13 +101,12 @@ export default async function DashboardPage() {
                 <p className="text-sm text-gray-600 mb-1">ID: {reseller?.apiResellerId}</p>
                 <p className="text-sm text-gray-600 mb-1">Level: {reseller?.level}</p>
                 <p className="text-sm text-gray-600 mb-4">Area: {reseller?.area}</p>
-                
-                {/* Edit Profil Button */}
+                  {/* Edit Profil Button */}
                 <Link
-                  href="/dashboard/profil/edit"
+                  href="/dashboard/profil"
                   className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors text-center"
                 >
-                  Edit Profil
+                  Kelola Profil
                 </Link>
               </div>
             </div>

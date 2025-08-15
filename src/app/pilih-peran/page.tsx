@@ -4,23 +4,31 @@ import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
 export default function PilihPeranPage() {
-  const router = useRouter();
-  // On mount, check whether this user is already linked to a reseller
+  const router = useRouter();  // On mount, check whether this user is already linked to a reseller
   useEffect(() => {
     let mounted = true;
     (async () => {
       try {
+        console.log('[pilih-peran] Checking if user is already linked...');
         const res = await fetch('/api/resellers/me');
+        console.log('[pilih-peran] API response status:', res.status);
         if (!mounted) return;
         if (res.ok) {
           const data = await res.json();
+          console.log('[pilih-peran] API response data:', data);
           const apiResellerId = data?.reseller?.apiResellerId ?? null;
           if (apiResellerId) {
-            // redirect to reseller profile page
-            router.replace(`/reseller/${apiResellerId}`);
+            console.log('[pilih-peran] User is already linked, middleware should redirect');
+            // Let middleware handle the redirect, no need to do it here
+            return;
+          } else {
+            console.log('[pilih-peran] User is not linked to any reseller');
           }
+        } else {
+          console.log('[pilih-peran] API call failed with status:', res.status);
         }
       } catch (e) {
+        console.error('[pilih-peran] Error checking reseller link:', e);
         // ignore — unauthenticated or not linked
       }
     })();
