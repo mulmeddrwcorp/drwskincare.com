@@ -37,7 +37,7 @@ export async function POST(request: Request) {
 async function handleSync(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
-    const syncType = searchParams.get('type'); // 'resellers', 'products', or null for both
+    const syncType = searchParams.get('type'); // 'resellers', 'products', 'bundling', or null for all
     
     // Verify authorization for cron jobs
     const authHeader = request.headers.get('authorization');
@@ -49,6 +49,7 @@ async function handleSync(request: Request) {
 
     let resellersCount = 0;
     let productsCount = 0;
+    let bundlingCount = 0;
 
     // 1. Sync data resellers (if type is 'resellers' or null)
     if (!syncType || syncType === 'resellers') {
@@ -153,14 +154,92 @@ async function handleSync(request: Request) {
       }
     }
 
+    // 3. Sync data bundling
+    if (!syncType || syncType === 'bundling') {
+      console.log('Syncing bundling...');
+      const bundlingResponse = await fetch('https://drwgroup.id/apis/bundling/get', {
+        headers: {
+          'Authorization': 'Bearer c5d46484b83e6d90d2c55bc7a0ec9782493a1fa2434b66ebed36c3e668f74e89'
+        }
+      });
+      const bundlingData = await bundlingResponse.json();
+
+      if (bundlingData.data) {
+        bundlingCount = Array.isArray(bundlingData.data) ? bundlingData.data.length : 0;
+        
+        // Find or create "Paket" category for bundling products
+        let paketCategory = await prisma.category.findFirst({
+          where: { name: 'Paket' }
+        });
+        
+        if (!paketCategory) {
+          paketCategory = await prisma.category.create({
+            data: {
+              name: 'Paket',
+              slug: 'paket',
+              description: 'Paket produk bundling'
+            }
+          });
+        }
+
+        for (const bundling of bundlingData.data) {
+          // Upload gambar bundling jika ada
+          let gambar = null;
+          if (bundling.foto_bundling) {
+            gambar = await uploadImageToBlob(
+              bundling.foto_bundling, 
+              `bundling-${bundling.id_bundling}-image.jpg`
+            );
+          }
+
+          await prisma.product.upsert({
+            where: { apiBundlingId: bundling.id_bundling },
+            update: {
+              namaProduk: bundling.nama_bundling,
+              hargaDirector: bundling.harga_director ? parseFloat(bundling.harga_director) : null,
+              hargaManager: bundling.harga_manager ? parseFloat(bundling.harga_manager) : null,
+              hargaSupervisor: bundling.harga_supervisor ? parseFloat(bundling.harga_supervisor) : null,
+              hargaConsultant: bundling.harga_consultant ? parseFloat(bundling.harga_consultant) : null,
+              hargaUmum: bundling.harga_umum ? parseFloat(bundling.harga_umum) : null,
+              fotoProduk: bundling.foto_bundling,
+              gambar: gambar,
+              deskripsi: bundling.deskripsi,
+              apiData: bundling,
+              categoryId: paketCategory.id,
+              updatedAt: new Date(),
+            },
+            create: {
+              apiBundlingId: bundling.id_bundling,
+              idProduk: `bundling-${bundling.id_bundling}`, // Generate unique idProduk for bundling
+              namaProduk: bundling.nama_bundling,
+              hargaDirector: bundling.harga_director ? parseFloat(bundling.harga_director) : null,
+              hargaManager: bundling.harga_manager ? parseFloat(bundling.harga_manager) : null,
+              hargaSupervisor: bundling.harga_supervisor ? parseFloat(bundling.harga_supervisor) : null,
+              hargaConsultant: bundling.harga_consultant ? parseFloat(bundling.harga_consultant) : null,
+              hargaUmum: bundling.harga_umum ? parseFloat(bundling.harga_umum) : null,
+              fotoProduk: bundling.foto_bundling,
+              gambar: gambar,
+              deskripsi: bundling.deskripsi,
+              apiData: bundling,
+              categoryId: paketCategory.id,
+              isBundling: true,
+              slug: createSlug(bundling.nama_bundling),
+            },
+          });
+        }
+      }
+    }
+
     // Simpan tanggal terakhir sync di database (atau file)
     const lastSync = new Date().toISOString();
-    await prisma.$executeRawUnsafe(`UPDATE public.sync_status SET last_sync = '${lastSync}'`);
+    // Remove this line that causes error since sync_status table doesn't exist
+    // await prisma.$executeRawUnsafe(`UPDATE public.sync_status SET last_sync = '${lastSync}'`);
 
     return NextResponse.json({ 
       message: 'Data sync completed successfully',
       resellers: resellersCount,
       products: productsCount,
+      bundling: bundlingCount,
       lastSync,
     });
   } catch (error) {

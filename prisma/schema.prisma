@@ -77,6 +77,9 @@ model Product {
   namaProduk      String
   categoryId      String?
   slug            String        @unique
+  isBundling      Boolean       @default(false)
+  apiBundlingId   String?       @unique
+  isVisible       Boolean       @default(true)
   hargaCustom     HargaCustom[]
   category        Category?     @relation(fields: [categoryId], references: [id])
 
