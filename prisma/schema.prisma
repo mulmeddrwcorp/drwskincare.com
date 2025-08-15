@@ -8,41 +8,62 @@ datasource db {
 }
 
 model Reseller {
-  id            String           @id @default(cuid())
-  apiData       Json?
-  createdAt     DateTime         @default(now())
-  updatedAt     DateTime         @updatedAt
-  area          String
-  idUpline      String?
-  level         String
-  namaReseller  String
-  nomorHp       String
-  apiResellerId String           @unique
-  email         String?
-  joinDate      DateTime         @default(now())
-  status        String           @default("active")
-  clickLogs     ClickLog[]
-  hargaCustom   HargaCustom[]
-  profile       ResellerProfile?
+  id             String           @id @default(cuid())
+  apiResellerId  String           @unique
+  nomorHp        String?          @unique
+  status         String           @default("active")
+  joinDate       DateTime         @default(now())
+  clerk_user_id  String?          @unique
+  // Clerk-synced basic profile fields (optional) — kept on Reseller for fast lookup
+  email_address  String?
+  photo_url      String?
+  // Raw API payload (keep all original API fields easily accessible)
+  apiData        Json?
+  // Track when the last API sync ran for this reseller
+  last_api_sync_at DateTime?
+
+  // relations
+  profile        ResellerProfile?
+  clickLogs      ClickLog[]
+  hargaCustom    HargaCustom[]
+
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
 
   @@map("resellers")
 }
 
 model ResellerProfile {
-  id             String   @id @default(cuid())
-  displayName    String?
-  whatsappNumber String?
-  photoUrl       String?
-  city           String?
-  bio            String?
-  facebook       String?
-  instagram      String?
-  isPublic       Boolean  @default(true)
-  customSlug     String?
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-  resellerId     String   @unique
-  reseller       Reseller @relation(fields: [resellerId], references: [id], onDelete: Cascade)
+  id              String   @id @default(cuid())
+  resellerId      String   @unique
+  reseller        Reseller @relation(fields: [resellerId], references: [id], onDelete: Cascade)
+
+  // user-editable / Clerk-synced fields (snake_case)
+  email_address   String?
+  nama_reseller   String?
+  whatsapp_number String?
+  photo_url       String?
+  city            String?
+  bio             String?
+  // Fields observed in external reseller API
+  nomor_hp        String?
+  area            String?
+  facebook        String?
+  instagram       String?
+  alamat          String?
+  provinsi        String?
+  kabupaten       String?
+  kecamatan       String?
+  bank            String?
+  rekening        String?
+  level           String?
+  // Store raw API payload for any additional keys
+  apiData         Json?
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  // When the user last edited this profile manually via the dashboard
+  last_user_update DateTime?
 
   @@map("reseller_profiles")
 }
@@ -64,6 +85,8 @@ model Product {
   deskripsi       String?
   gambar          String?
   apiData         Json?
+  // For bundling items or other API-provided lists
+  items           Json?
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
   bpom            String?

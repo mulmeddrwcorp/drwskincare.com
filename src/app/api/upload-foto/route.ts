@@ -19,10 +19,10 @@ export async function POST(request: Request) {
   // Simpan URL ke database Neon - update ResellerProfile
   await prisma.resellerProfile.upsert({
     where: { resellerId: resellerId },
-    update: { photoUrl: blob.url },
+    update: { photo_url: blob.url },
     create: { 
       resellerId: resellerId,
-      photoUrl: blob.url 
+      photo_url: blob.url 
     },
   });
 

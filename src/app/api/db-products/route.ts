@@ -20,7 +20,7 @@ export async function GET(request: Request) {
 
     // Existing filters
     const search = searchParams.get('search');
-    const sortBy = searchParams.get('sortBy') || 'namaProduk';
+  const sortBy = searchParams.get('sortBy') || 'namaProduk';
     const sortOrder = searchParams.get('sortOrder') || 'asc';
     const minPrice = searchParams.get('minPrice');
     const maxPrice = searchParams.get('maxPrice');
@@ -44,9 +44,14 @@ export async function GET(request: Request) {
       if (maxPrice) whereClause.hargaUmum.lte = parseFloat(maxPrice);
     }
 
-    // Validate sort field
-    const allowedSortFields = ['namaProduk', 'hargaUmum', 'createdAt'];
-    const validSortBy = allowedSortFields.includes(sortBy) ? sortBy : 'namaProduk';
+    // Validate sort field and map to DB column names if necessary
+    const sortFieldMap: Record<string, string> = {
+      namaProduk: 'namaProduk',
+      nama_produk: 'namaProduk',
+      hargaUmum: 'hargaUmum',
+      createdAt: 'createdAt',
+    };
+    const validSortBy = sortFieldMap[sortBy] ?? 'namaProduk';
     const validSortOrder = ['asc', 'desc'].includes(sortOrder) ? sortOrder : 'asc';
 
     // Use transaction to fetch products (with category) and total count

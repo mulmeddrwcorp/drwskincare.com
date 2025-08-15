@@ -1,10 +1,14 @@
 "use client";
 import { useEffect, useState } from "react";
+import { useSearchParams } from 'next/navigation';
 
 export default function ResellerPage() {
   const [resellers, setResellers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const searchParams = useSearchParams();
+  const linkedFlag = searchParams?.get ? searchParams.get('linked') === 'true' : false;
+  const [flash, setFlash] = useState<string | null>(linkedFlag ? 'Akun Anda sudah terkait ke Reseller — menampilkan profil Anda.' : null);
 
   useEffect(() => {
     async function fetchResellers() {
@@ -30,7 +34,9 @@ export default function ResellerPage() {
       ) : error ? (
         <div className="text-center text-red-500">{error}</div>
       ) : (
-        <div className="overflow-x-auto">
+        <>
+          {flash ? <div className="mb-4 rounded bg-green-100 text-green-800 px-4 py-2">{flash}</div> : null}
+          <div className="overflow-x-auto">
           <table className="min-w-full border rounded-xl bg-white/60 backdrop-blur-md"><thead>
               <tr className="bg-brand-100">
                 <th className="px-4 py-2 text-left font-semibold text-brand-700">ID</th>
@@ -41,14 +47,14 @@ export default function ResellerPage() {
               </tr>
             </thead><tbody>
               {resellers.map((reseller, index) => (
-                <tr key={reseller.idReseller || index} className="border-b hover:bg-brand-50/50">
-                  <td className="px-4 py-2 text-sm text-brand-800/80">{reseller.idReseller}</td>
+                <tr key={reseller.apiResellerId ?? reseller.idReseller ?? index} className="border-b hover:bg-brand-50/50">
+                  <td className="px-4 py-2 text-sm text-brand-800/80">{reseller.apiResellerId ?? reseller.idReseller}</td>
                   <td className="px-4 py-2 text-sm text-brand-800/80 font-medium">
                     <a 
-                      href={`/reseller/${reseller.idReseller}`}
+                      href={`/reseller/${reseller.apiResellerId ?? reseller.idReseller}`}
                       className="text-brand-700 hover:text-brand-600 transition-colors"
                     >
-                      {reseller.namaReseller}
+                      {reseller.namaReseller ?? reseller.profile?.nama_reseller ?? reseller.profile?.displayName ?? reseller.apiResellerId}
                     </a>
                   </td>
                   <td className="px-4 py-2 text-sm text-brand-800/80">
@@ -56,17 +62,21 @@ export default function ResellerPage() {
                       {reseller.level}
                     </span>
                   </td>
-                  <td className="px-4 py-2 text-sm text-brand-800/80">{reseller.area}</td>
+                  <td className="px-4 py-2 text-sm text-brand-800/80">{reseller.area ?? reseller.profile?.city ?? reseller.profile?.city}</td>
                   <td className="px-4 py-2 text-sm">
                     <div className="flex gap-2">
                       <a 
-                        href={`/reseller/${reseller.idReseller}`}
+                        href={`/reseller/${reseller.apiResellerId ?? reseller.idReseller}`}
                         className="inline-flex items-center px-3 py-1 bg-brand-500 text-white text-xs font-medium rounded hover:bg-brand-600 transition-colors"
                       >
                         Lihat Profil
                       </a>
                       <a 
-                        href={`https://wa.me/${reseller.nomorHp.replace(/[^0-9]/g, '')}?text=${encodeURIComponent('Halo! Saya tertarik dengan produk DRW Skincare.')}`}
+                        href={
+                          (reseller.nomorHp || reseller.profile?.whatsapp_number)
+                            ? `https://wa.me/${String(reseller.nomorHp || reseller.profile?.whatsapp_number).replace(/[^0-9]/g, '')}?text=${encodeURIComponent('Halo! Saya tertarik dengan produk DRW Skincare.')}`
+                            : '#'
+                        }
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex items-center px-3 py-1 bg-green-500 text-white text-xs font-medium rounded hover:bg-green-600 transition-colors"
@@ -78,7 +88,8 @@ export default function ResellerPage() {
                 </tr>
               ))}
             </tbody></table>
-        </div>
+          </div>
+        </>
       )}
     </div>
   );

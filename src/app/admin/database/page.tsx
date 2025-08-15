@@ -4,14 +4,14 @@ import { useState, useEffect } from 'react';
 
 interface Reseller {
   id: string;
-  idReseller: string;
-  namaReseller: string;
-  nomorHp: string;
-  area: string;
-  level: string;
-  fotoProfil?: string;
-  facebook?: string;
-  instagram?: string;
+  apiResellerId?: string;
+  idReseller?: string;
+  namaReseller?: string;
+  nomorHp?: string;
+  area?: string;
+  level?: string;
+  fotoProfil?: string; // legacy
+  profile?: any; // include profile object
 }
 
 interface Product {
@@ -134,20 +134,20 @@ export default function DatabaseView() {
                     <tbody>
                       {resellers.map((reseller, index) => (
                         <tr key={reseller.id} className={index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}>
-                          <td className="px-6 py-4 font-mono text-sm">{reseller.idReseller}</td>
-                          <td className="px-6 py-4 font-semibold">{reseller.namaReseller}</td>
-                          <td className="px-6 py-4">{reseller.nomorHp}</td>
-                          <td className="px-6 py-4">{reseller.area}</td>
+                          <td className="px-6 py-4 font-mono text-sm">{reseller.apiResellerId ?? reseller.idReseller}</td>
+                          <td className="px-6 py-4 font-semibold">{reseller.namaReseller ?? reseller.profile?.nama_reseller ?? reseller.apiResellerId}</td>
+                          <td className="px-6 py-4">{reseller.nomorHp ?? reseller.profile?.whatsapp_number}</td>
+                          <td className="px-6 py-4">{reseller.area ?? reseller.profile?.city}</td>
                           <td className="px-6 py-4">
                             <span className="px-3 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-800">
                               {reseller.level}
                             </span>
                           </td>
                           <td className="px-6 py-4">
-                            {reseller.fotoProfil ? (
+                            { (reseller.fotoProfil || reseller.profile?.photo_url) ? (
                               <img 
-                                src={reseller.fotoProfil} 
-                                alt="Foto" 
+                                src={String(reseller.fotoProfil ?? reseller.profile?.photo_url)} 
+                                alt={String(reseller.namaReseller ?? reseller.profile?.nama_reseller ?? reseller.apiResellerId)} 
                                 className="w-10 h-10 rounded-full object-cover"
                               />
                             ) : (

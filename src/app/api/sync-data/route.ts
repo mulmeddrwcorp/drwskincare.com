@@ -66,32 +66,44 @@ async function handleSync(request: Request) {
         
         // 2. Loop through each reseller from API
         for (const resellerFromApi of resellersData.data) {
-          // 3. Upsert reseller data - only core Reseller fields
-          await prisma.reseller.upsert({
-            where: { 
-              apiResellerId: resellerFromApi.id_reseller 
+          // 3. Upsert reseller data - only core Reseller fields defined in prisma schema
+          const upsertedReseller = await prisma.reseller.upsert({
+            where: {
+              apiResellerId: resellerFromApi.id_reseller,
             },
             create: {
               apiResellerId: resellerFromApi.id_reseller,
-              namaReseller: resellerFromApi.nama_reseller,
-              nomorHp: resellerFromApi.nomor_hp,
-              area: resellerFromApi.area,
-              level: resellerFromApi.level,
-              email: resellerFromApi.email || null,
+              nomorHp: resellerFromApi.nomor_hp || null,
               status: resellerFromApi.status || 'active',
-              apiData: resellerFromApi,
             },
             update: {
-              namaReseller: resellerFromApi.nama_reseller,
-              nomorHp: resellerFromApi.nomor_hp,
-              area: resellerFromApi.area,
-              level: resellerFromApi.level,
-              email: resellerFromApi.email || null,
+              nomorHp: resellerFromApi.nomor_hp || null,
               status: resellerFromApi.status || 'active',
-              apiData: resellerFromApi,
               updatedAt: new Date(),
             },
           });
+
+          // 3b. Upsert ResellerProfile for editable/display data (nama_reseller, city, email)
+          try {
+            await prisma.resellerProfile.upsert({
+              where: { resellerId: upsertedReseller.id },
+              create: {
+                resellerId: upsertedReseller.id,
+                nama_reseller: resellerFromApi.nama_reseller || null,
+                city: resellerFromApi.area || null,
+                email_address: resellerFromApi.email || null,
+              },
+              update: {
+                nama_reseller: resellerFromApi.nama_reseller || null,
+                city: resellerFromApi.area || null,
+                email_address: resellerFromApi.email || null,
+                updatedAt: new Date(),
+              },
+            });
+          } catch (e) {
+            // if profile table constraints or other issues occur, log and continue
+            console.warn('upsert resellerProfile failed for', resellerFromApi.id_reseller, e);
+          }
         }
       }
     }
@@ -131,7 +143,6 @@ async function handleSync(request: Request) {
               fotoProduk: product.foto_produk,
               gambar: gambar,
               deskripsi: product.deskripsi,
-              apiData: product,
               updatedAt: new Date(),
             },
             create: {
@@ -146,7 +157,6 @@ async function handleSync(request: Request) {
               fotoProduk: product.foto_produk,
               gambar: gambar,
               deskripsi: product.deskripsi,
-              apiData: product,
               slug: product.slug || createSlug(product.nama_produk),
             },
           });
@@ -204,7 +214,6 @@ async function handleSync(request: Request) {
               fotoProduk: bundling.foto_bundling,
               gambar: gambar,
               deskripsi: bundling.deskripsi,
-              apiData: bundling,
               categoryId: paketCategory.id,
               updatedAt: new Date(),
             },
@@ -220,7 +229,6 @@ async function handleSync(request: Request) {
               fotoProduk: bundling.foto_bundling,
               gambar: gambar,
               deskripsi: bundling.deskripsi,
-              apiData: bundling,
               categoryId: paketCategory.id,
               isBundling: true,
               slug: createSlug(bundling.nama_bundling),

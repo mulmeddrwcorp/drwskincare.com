@@ -39,7 +39,7 @@ function toSlug(name: string) {
 
 // Local ProductCard (server component)
 function ProductCard({ product }: { product: any }) {
-  const slug = product.slug || toSlug(product.namaProduk || '');
+  const slug = product.slug || toSlug(product.namaProduk || product.nama_produk || product.name || '');
   return (
     <div className="card group relative overflow-hidden">
       <div className="absolute inset-0 bg-gradient-to-br from-brand-400/20 to-brand-200/10 opacity-0 group-hover:opacity-100 transition" />
@@ -48,7 +48,7 @@ function ProductCard({ product }: { product: any }) {
           {product.gambar && (
             <Image
               src={String(product.gambar).replace(/\\/g, '')}
-              alt={product.namaProduk}
+              alt={String(product.namaProduk ?? product.nama_produk ?? product.name ?? 'Produk')}
               width={128}
               height={128}
               className="w-32 h-32 object-cover rounded-xl shadow-md group-hover:scale-105 transition-transform duration-200"
@@ -56,8 +56,8 @@ function ProductCard({ product }: { product: any }) {
           )}
           <div className="text-center">
             <h2 className="text-lg font-semibold text-brand-700 mb-2">
-              <Link href={`/produk/${slug}`} className="hover:text-brand-600 transition-colors">
-                {product.namaProduk}
+                <Link href={`/produk/${slug}`} className="hover:text-brand-600 transition-colors">
+                {product.namaProduk ?? product.nama_produk ?? product.name}
               </Link>
             </h2>
             {product.bpom && (

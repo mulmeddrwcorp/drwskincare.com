@@ -16,6 +16,12 @@ export default function EditProfilPage() {
     whatsappNumber: '',
     facebook: '',
     instagram: '',
+  alamat: '',
+  provinsi: '',
+  kabupaten: '',
+  kecamatan: '',
+  bank: '',
+  rekening: '',
   });
 
   // State untuk loading dan notifikasi
@@ -38,13 +44,19 @@ export default function EditProfilPage() {
           const data = await response.json();
           const reseller = data.reseller;
           
-          // Isi form dengan data yang ada
+          // Isi form dengan data yang ada (mapped profile fields)
           setFormData({
-            name: reseller.namaReseller || '',
-            city: reseller.area || '',
-            whatsappNumber: reseller.nomorHp || '',
-            facebook: reseller.facebook || '',
-            instagram: reseller.instagram || '',
+            name: reseller.namaReseller || (reseller.profile?.nama_reseller ?? reseller.profile?.displayName) || '',
+            city: reseller.area || reseller.profile?.city || '',
+            whatsappNumber: (reseller.profile?.whatsapp_number ?? reseller.profile?.whatsappNumber) || reseller.nomorHp || '',
+            facebook: reseller.profile?.facebook || '',
+            instagram: reseller.profile?.instagram || '',
+              alamat: reseller.profile?.alamat || '',
+              provinsi: reseller.profile?.provinsi || '',
+              kabupaten: reseller.profile?.kabupaten || '',
+              kecamatan: reseller.profile?.kecamatan || '',
+              bank: reseller.profile?.bank || '',
+              rekening: reseller.profile?.rekening || '',
           });
         } else {
           console.error('Failed to fetch profile data');
@@ -88,12 +100,28 @@ export default function EditProfilPage() {
     setLoading(true);
 
     try {
+      const payload = {
+  nama_reseller: formData.name,
+        city: formData.city,
+        whatsapp_number: formData.whatsappNumber || null,
+        bio: null,
+        photo_url: null,
+        facebook: formData.facebook || null,
+        instagram: formData.instagram || null,
+  alamat: formData.alamat || null,
+  provinsi: formData.provinsi || null,
+  kabupaten: formData.kabupaten || null,
+  kecamatan: formData.kecamatan || null,
+  bank: formData.bank || null,
+  rekening: formData.rekening || null,
+      };
+
       const response = await fetch('/api/resellers/me', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(payload),
       });
 
       const data = await response.json();
@@ -266,6 +294,91 @@ export default function EditProfilPage() {
                 onChange={handleInputChange}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                 placeholder="https://instagram.com/username"
+              />
+            </div>
+
+            {/* Alamat */}
+            <div>
+              <label htmlFor="alamat" className="block text-sm font-medium text-gray-700 mb-2">
+                Alamat Lengkap
+              </label>
+              <input
+                type="text"
+                id="alamat"
+                name="alamat"
+                value={formData.alamat}
+                onChange={handleInputChange}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                placeholder="Jalan, Nomor, RT/RW"
+              />
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label htmlFor="provinsi" className="block text-sm font-medium text-gray-700 mb-2">Provinsi</label>
+                <input
+                  type="text"
+                  id="provinsi"
+                  name="provinsi"
+                  value={formData.provinsi}
+                  onChange={handleInputChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                  placeholder="Provinsi"
+                />
+              </div>
+
+              <div>
+                <label htmlFor="kabupaten" className="block text-sm font-medium text-gray-700 mb-2">Kabupaten/Kota</label>
+                <input
+                  type="text"
+                  id="kabupaten"
+                  name="kabupaten"
+                  value={formData.kabupaten}
+                  onChange={handleInputChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                  placeholder="Kabupaten atau Kota"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label htmlFor="kecamatan" className="block text-sm font-medium text-gray-700 mb-2">Kecamatan</label>
+                <input
+                  type="text"
+                  id="kecamatan"
+                  name="kecamatan"
+                  value={formData.kecamatan}
+                  onChange={handleInputChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                  placeholder="Kecamatan"
+                />
+              </div>
+
+              <div>
+                <label htmlFor="bank" className="block text-sm font-medium text-gray-700 mb-2">Bank</label>
+                <input
+                  type="text"
+                  id="bank"
+                  name="bank"
+                  value={formData.bank}
+                  onChange={handleInputChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                  placeholder="Nama Bank"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label htmlFor="rekening" className="block text-sm font-medium text-gray-700 mb-2">Nomor Rekening</label>
+              <input
+                type="text"
+                id="rekening"
+                name="rekening"
+                value={formData.rekening}
+                onChange={handleInputChange}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                placeholder="Nomor Rekening"
               />
             </div>
 

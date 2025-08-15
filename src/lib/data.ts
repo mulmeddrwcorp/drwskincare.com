@@ -5,42 +5,9 @@ const prisma = new PrismaClient();
 
 // Type definitions for return values
 export interface ResellerPublicProfile {
-  reseller: {
-    id: string;
-    apiResellerId: string;
-    namaReseller: string;
-    nomorHp: string;
-    area: string;
-    level: string;
-    status: string;
-    createdAt: Date;
-    profile?: {
-      id: string;
-      displayName: string | null;
-      whatsappNumber: string | null;
-      photoUrl: string | null;
-      city: string | null;
-      bio: string | null;
-      facebook: string | null;
-      instagram: string | null;
-      isPublic: boolean;
-      customSlug: string | null;
-    } | null;
-  };
-  products: Array<any>; // Complete product objects
-  customPrices: Array<{
-    id: string;
-    resellerId: string;
-    productId: string;
-    hargaCustom: any; // Decimal type
-    createdAt: Date;
-    updatedAt: Date;
-    product: {
-      id: string;
-      namaProduk: string;
-      gambar: string | null;
-    };
-  }>;
+  reseller: any; // legacy shape used by UI — we map DB fields to this shape below
+  products: Array<any>;
+  customPrices: Array<any>;
 }
 
 /**
@@ -78,7 +45,10 @@ export async function getProductBySlug(slug: string) {
   // Fallback: fetch all products and try matching against stored slug or generated slug from namaProduk
   try {
     const products = await prisma.product.findMany();
-    const matched = products.find((p: any) => p.slug === slug || createSlug(p.namaProduk) === slug);
+    const matched = products.find((p: any) => {
+      const productName = p.namaProduk ?? p.nama_produk ?? p.name ?? '';
+      return p.slug === slug || createSlug(productName) === slug;
+    });
     return matched || null;
   } catch (error) {
     console.error('Error fetching product by slug (fallback):', error);
@@ -101,34 +71,8 @@ export async function getResellerDashboardData() {
 
     // 2. Gunakan userId untuk mengambil data reseller dari database
     const reseller = await prisma.reseller.findUnique({
-      where: {
-        apiResellerId: userId // Assuming userId corresponds to apiResellerId
-      },
-      select: {
-        id: true,
-        apiResellerId: true,
-        namaReseller: true,
-        nomorHp: true,
-        area: true,
-        level: true,
-        status: true,
-        createdAt: true,
-        updatedAt: true,
-        profile: {
-          select: {
-            id: true,
-            displayName: true,
-            whatsappNumber: true,
-            photoUrl: true,
-            city: true,
-            bio: true,
-            facebook: true,
-            instagram: true,
-            isPublic: true,
-            customSlug: true,
-          }
-        }
-      }
+      where: { apiResellerId: userId },
+      include: { profile: true }
     });
 
     if (!reseller) {
@@ -149,10 +93,45 @@ export async function getResellerDashboardData() {
       totalClicks = 0;
     }
 
-    // 4. Kembalikan objek yang berisi reseller dan totalClicks
+    // 4. Map DB fields (snake_case) ke bentuk legacy yang digunakan UI (camelCase)
+    const profile = (reseller as any).profile;
+    const mappedReseller = {
+      id: reseller.id,
+      apiResellerId: reseller.apiResellerId,
+  namaReseller: profile?.nama_reseller ?? reseller.apiResellerId,
+      nomorHp: reseller.nomorHp ?? null,
+      area: profile?.city ?? null,
+      level: reseller.status ?? 'member',
+      status: reseller.status,
+      createdAt: reseller.createdAt,
+      updatedAt: reseller.updatedAt,
+      profile: profile
+        ? {
+            id: profile.id,
+            displayName: profile.nama_reseller,
+            whatsappNumber: profile.whatsapp_number,
+            photoUrl: profile.photo_url,
+            city: profile.city,
+            bio: profile.bio,
+            email: profile.email_address,
+            // map new fields from ResellerProfile when present
+            facebook: profile.facebook ?? null,
+            instagram: profile.instagram ?? null,
+            alamat: profile.alamat ?? null,
+            provinsi: profile.provinsi ?? null,
+            kabupaten: profile.kabupaten ?? null,
+            kecamatan: profile.kecamatan ?? null,
+            bank: profile.bank ?? null,
+            rekening: profile.rekening ?? null,
+            isPublic: true,
+            customSlug: null,
+          }
+        : null,
+    };
+
     return {
-      reseller,
-      totalClicks
+      reseller: mappedReseller,
+      totalClicks,
     };
 
   } catch (error) {
@@ -164,23 +143,20 @@ export async function getResellerPublicProfile(username: string): Promise<Resell
   try {
     // 1. Cari reseller berdasarkan apiResellerId (username) dengan include profile
     const reseller = await prisma.reseller.findUnique({
-      where: {
-        apiResellerId: username
-      },
-      include: {
-        profile: true // Mengambil data ResellerProfile yang terhubung
-      }
+      where: { apiResellerId: username },
+      include: { profile: true }
     });
 
-    // Jika reseller tidak ditemukan atau profil tidak public, kembalikan null
-    if (!reseller || (reseller.profile && !reseller.profile.isPublic)) {
+    // Jika reseller tidak ditemukan, kembalikan null
+    if (!reseller) {
       return null;
     }
 
     // 2. Ambil SEMUA daftar produk
     const products = await prisma.product.findMany({
       orderBy: {
-        namaProduk: 'asc'
+        // Try ordering by camelCase field if present in generated client, fallback to snake_case in DB
+        namaProduk: 'asc' as any,
       }
     });
 
@@ -203,11 +179,45 @@ export async function getResellerPublicProfile(username: string): Promise<Resell
       }
     });
 
+    // Map DB snake_case fields to legacy UI shape
+    const mappedReseller = {
+      id: reseller.id,
+      apiResellerId: reseller.apiResellerId,
+  namaReseller: reseller.profile?.nama_reseller ?? reseller.apiResellerId,
+      nomorHp: reseller.nomorHp ?? null,
+      area: reseller.profile?.city ?? null,
+      level: reseller.status ?? 'member',
+      status: reseller.status,
+      createdAt: reseller.createdAt,
+      updatedAt: reseller.updatedAt,
+      profile: reseller.profile
+        ? {
+            id: reseller.profile.id,
+            displayName: reseller.profile.nama_reseller,
+            whatsappNumber: reseller.profile.whatsapp_number,
+            photoUrl: reseller.profile.photo_url,
+            city: reseller.profile.city,
+            bio: reseller.profile.bio,
+            email: reseller.profile.email_address,
+            facebook: reseller.profile.facebook ?? null,
+            instagram: reseller.profile.instagram ?? null,
+            alamat: reseller.profile.alamat ?? null,
+            provinsi: reseller.profile.provinsi ?? null,
+            kabupaten: reseller.profile.kabupaten ?? null,
+            kecamatan: reseller.profile.kecamatan ?? null,
+            bank: reseller.profile.bank ?? null,
+            rekening: reseller.profile.rekening ?? null,
+            isPublic: true,
+            customSlug: null,
+          }
+        : null,
+    };
+
     // Kembalikan objek dengan reseller, products, dan customPrices
     return {
-      reseller,
+      reseller: mappedReseller,
       products,
-      customPrices
+      customPrices,
     };
 
   } catch (error) {

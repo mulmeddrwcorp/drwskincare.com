@@ -45,7 +45,7 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
           </>
         )}
         <span>/</span>
-        <span className="text-gray-500">{product.namaProduk}</span>
+        <span className="text-gray-500">{product.namaProduk ?? product.nama_produk ?? product.name}</span>
       </nav>
 
       {/* Layout dua kolom */}
@@ -56,8 +56,8 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
             <div className="relative aspect-square rounded-2xl overflow-hidden bg-white shadow-lg">
               {product.gambar ? (
                 <Image
-                  src={product.gambar.replace(/\\/g, "")}
-                  alt={product.namaProduk}
+                  src={String(product.gambar).replace(/\\/g, "")}
+                  alt={String(product.namaProduk ?? product.nama_produk ?? product.name)}
                   fill
                   className="object-cover"
                   priority
@@ -82,7 +82,7 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
             <div>
               <div className="flex items-start justify-between gap-3">
                 <h1 className="text-3xl font-bold text-gray-900 mb-2">
-                  {product.namaProduk}
+                  {product.namaProduk ?? product.nama_produk ?? product.name}
                 </h1>
                 {product?.category?.name && (
                   <span className="px-3 py-1 h-fit rounded-full bg-brand-100 text-brand-700 text-xs font-medium">
@@ -211,25 +211,25 @@ export async function generateMetadata({ params }: ProductPageProps) {
     return text.substring(0, maxLength).trim() + '...';
   };
 
-  const defaultDescription = `${product.namaProduk} - Produk kecantikan berkualitas dari DRW Skincare dengan BPOM ${product.bpom || 'terdaftar'}.`;
+  const defaultDescription = `${product.namaProduk ?? product.nama_produk ?? product.name} - Produk kecantikan berkualitas dari DRW Skincare dengan BPOM ${product.bpom || 'terdaftar'}.`;
   const description = product.deskripsi 
     ? truncateDescription(product.deskripsi) 
     : defaultDescription;
 
   return {
-    title: `${product.namaProduk} | DRW Skincare`,
+    title: `${product.namaProduk ?? product.nama_produk ?? product.name} | DRW Skincare`,
     description: description,
-    keywords: `${product.namaProduk}, ${product?.category?.name ? product.category.name + ', ' : ''}skincare, kecantikan, BPOM, DRW Skincare`,    openGraph: {
-      title: product.namaProduk,
+    keywords: `${product.namaProduk ?? product.nama_produk ?? product.name}, ${product?.category?.name ? product.category.name + ', ' : ''}skincare, kecantikan, BPOM, DRW Skincare`,    openGraph: {
+      title: product.namaProduk ?? product.nama_produk ?? product.name,
       description: description,
-      images: product.gambar ? [product.gambar.replace(/\\/g, "")] : [],
+      images: product.gambar ? [String(product.gambar).replace(/\\/g, "")] : [],
       type: 'website',
     },
     twitter: {
       card: 'summary_large_image',
-      title: product.namaProduk,
+      title: product.namaProduk ?? product.nama_produk ?? product.name,
       description: description,
-      images: product.gambar ? [product.gambar.replace(/\\/g, "")] : [],
+      images: product.gambar ? [String(product.gambar).replace(/\\/g, "")] : [],
     }
   };
 }

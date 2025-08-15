@@ -21,6 +21,9 @@ const nextConfig = {
       { protocol: 'https', hostname: 'public.blob.vercel-storage.com', pathname: '/**' },
       // Vercel Blob public storage (any project subdomain)
       { protocol: 'https', hostname: '**.public.blob.vercel-storage.com', pathname: '/**' },
+  // Clerk hosted images
+  { protocol: 'https', hostname: 'img.clerk.com', pathname: '/**' },
+  { protocol: 'https', hostname: 'images.clerk.com', pathname: '/**' },
     ],
   },
 };

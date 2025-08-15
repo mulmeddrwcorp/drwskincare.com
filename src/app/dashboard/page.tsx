@@ -3,6 +3,9 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 
+// Mark this page as dynamic because it uses dynamic/server-only APIs (auth/headers)
+export const dynamic = 'force-dynamic';
+
 export default async function DashboardPage() {
   // Ambil data reseller dashboard
   const dashboardData = await getResellerDashboardData();
@@ -35,7 +38,7 @@ export default async function DashboardPage() {
       <div className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <h1 className="text-3xl font-bold text-gray-900">
-            Selamat Datang, {reseller.namaReseller}!
+            Selamat Datang, {reseller?.namaReseller ?? 'Reseller'}!
           </h1>
           <p className="mt-2 text-gray-600">
             Kelola toko online Anda dan pantau performa penjualan
@@ -55,28 +58,49 @@ export default async function DashboardPage() {
               <div className="flex flex-col items-center text-center">
                 {/* Foto Profil */}
                 <div className="w-24 h-24 rounded-full overflow-hidden bg-gray-200 mb-4">
-                  {reseller.profile?.photoUrl ? (
-                    <Image
-                      src={reseller.profile.photoUrl}
-                      alt={reseller.namaReseller}
-                      width={96}
-                      height={96}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-gray-500">
-                      <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
-                      </svg>
-                    </div>
-                  )}
-                </div>
+                    {(() => {
+                      // compute preferred profile image: prefer non-clerk hosts
+                      const candidates = [
+                        (reseller as any)?.profile?.photo_url,
+                        (reseller as any)?.profile?.photoUrl,
+                        (reseller as any).fotoProfil,
+                        (reseller as any)?.photo_url,
+                      ].filter(Boolean).map(String);
+
+                      const preferred = (() => {
+                        if (candidates.length === 0) return null;
+                        const nonClerk = candidates.find((u: string) => {
+                          try {
+                            const h = new URL(u).hostname;
+                            return !/clerk\.com$/.test(h) && !h.includes('clerk.com');
+                          } catch { return true; }
+                        });
+                        return nonClerk ?? candidates[0];
+                      })();
+
+                      return preferred ? (
+                        <Image
+                          src={String(preferred)}
+                          alt={String((reseller as any)?.namaReseller ?? (reseller as any)?.profile?.nama_reseller ?? (reseller as any)?.profile?.displayName ?? 'Profile')}
+                          width={96}
+                          height={96}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-gray-500">
+                          <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
+                          </svg>
+                        </div>
+                      );
+                    })()}
+                  </div>
                 
                 {/* Info Profil */}
-                <h3 className="text-lg font-medium text-gray-900 mb-1">{reseller.namaReseller}</h3>
-                <p className="text-sm text-gray-600 mb-1">ID: {reseller.apiResellerId}</p>
-                <p className="text-sm text-gray-600 mb-1">Level: {reseller.level}</p>
-                <p className="text-sm text-gray-600 mb-4">Area: {reseller.area}</p>
+                <h3 className="text-lg font-medium text-gray-900 mb-1">{reseller?.namaReseller ?? reseller?.profile?.displayName ?? reseller?.apiResellerId}</h3>
+                <p className="text-sm text-gray-600 mb-1">ID: {reseller?.apiResellerId}</p>
+                <p className="text-sm text-gray-600 mb-1">Level: {reseller?.level}</p>
+                <p className="text-sm text-gray-600 mb-4">Area: {reseller?.area}</p>
                 
                 {/* Edit Profil Button */}
                 <Link

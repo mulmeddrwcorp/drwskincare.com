@@ -8,57 +8,61 @@ export async function PUT(request: NextRequest) {
   try {
     // 1. Proteksi route dengan Clerk auth
     const { userId } = await auth();
-    
+
     if (!userId) {
-      return NextResponse.json(
-        { error: 'Unauthorized - Please login first' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: 'Unauthorized - Please login first' }, { status: 401 });
     }
 
     // 2. Ambil data dari body request
     const body = await request.json();
-    const { displayName, city, whatsappNumber, facebook, instagram, bio, photoUrl, isPublic, customSlug } = body;
+    const { displayName, city, whatsappNumber, bio, photoUrl, facebook, instagram, alamat, provinsi, kabupaten, kecamatan, bank, rekening } = body;
 
-    // 3. Gunakan prisma.resellerProfile.upsert() untuk membuat atau mengupdate profil
+    // 3. Temukan reseller yang sudah di-link ke Clerk user
+    const reseller = await prisma.reseller.findUnique({ where: { clerk_user_id: userId } });
+    if (!reseller) {
+      return NextResponse.json({ error: 'Reseller not linked to this user' }, { status: 404 });
+    }
+
+    // 4. Gunakan prisma.resellerProfile.upsert() untuk membuat atau mengupdate profil menggunakan reseller.id
     const updatedProfile = await prisma.resellerProfile.upsert({
-      where: { 
-        resellerId: userId // Kunci relasi yang unik
-      },
+      where: { resellerId: reseller.id },
       create: {
-        resellerId: userId, // Wajib untuk membuat relasi
-        displayName: displayName || null,
+        resellerId: reseller.id,
+        nama_reseller: displayName || null,
         city: city || null,
-        whatsappNumber: whatsappNumber || null,
+        whatsapp_number: whatsappNumber || null,
+        bio: bio || null,
+        photo_url: photoUrl || null,
+        last_user_update: new Date(),
         facebook: facebook || null,
         instagram: instagram || null,
-        bio: bio || null,
-        photoUrl: photoUrl || null,
-        isPublic: isPublic !== undefined ? isPublic : true,
-        customSlug: customSlug || null,
+        alamat: alamat || null,
+        provinsi: provinsi || null,
+        kabupaten: kabupaten || null,
+        kecamatan: kecamatan || null,
+        bank: bank || null,
+        rekening: rekening || null,
       },
       update: {
-        displayName: displayName || null,
+        nama_reseller: displayName || null,
         city: city || null,
-        whatsappNumber: whatsappNumber || null,
+        whatsapp_number: whatsappNumber || null,
+        bio: bio || null,
+        photo_url: photoUrl || null,
+        updatedAt: new Date(),
+        last_user_update: new Date(),
         facebook: facebook || null,
         instagram: instagram || null,
-        bio: bio || null,
-        photoUrl: photoUrl || null,
-        isPublic: isPublic !== undefined ? isPublic : undefined,
-        customSlug: customSlug || null,
-        updatedAt: new Date(),
+        alamat: alamat || null,
+        provinsi: provinsi || null,
+        kabupaten: kabupaten || null,
+        kecamatan: kecamatan || null,
+        bank: bank || null,
+        rekening: rekening || null,
       }
     });
 
-    // 4. Kembalikan data profil yang baru diupdate sebagai respons JSON
-    return NextResponse.json(
-      { 
-        message: 'Profile updated successfully',
-        profile: updatedProfile 
-      },
-      { status: 200 }
-    );
+    return NextResponse.json({ message: 'Profile updated successfully', profile: updatedProfile }, { status: 200 });
 
   } catch (error) {
     // 5. Error handling
@@ -88,36 +92,30 @@ export async function GET() {
 
     const reseller = await prisma.reseller.findUnique({
       where: { 
-        apiResellerId: userId 
+        clerk_user_id: userId
       },
       select: {
         id: true,
         apiResellerId: true,
-        namaReseller: true,
         nomorHp: true,
-        area: true,
-        level: true,
         status: true,
+        joinDate: true,
         createdAt: true,
         updatedAt: true,
         profile: {
           select: {
             id: true,
-            displayName: true,
-            whatsappNumber: true,
-            photoUrl: true,
+            nama_reseller: true,
+            whatsapp_number: true,
+            photo_url: true,
             city: true,
             bio: true,
-            facebook: true,
-            instagram: true,
-            isPublic: true,
-            customSlug: true,
           }
         }
       }
     });
 
-    if (!reseller) {
+  if (!reseller) {
       return NextResponse.json(
         { error: 'Reseller profile not found' },
         { status: 404 }

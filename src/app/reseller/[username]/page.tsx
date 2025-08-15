@@ -37,11 +37,13 @@ function ProductCard({ product, displayPrice, resellerWhatsappNumber, resellerId
       .replace(/-+/g, '-')
       .trim();
   };
+  // Determine product name with fallbacks for legacy/snake_case fields
+  const productName = product.namaProduk ?? product.nama_produk ?? product.name ?? '';
 
-  const slug = product.slug || createSlug(product.namaProduk);
+  const slug = product.slug || createSlug(productName);
 
   // WhatsApp message template
-  const whatsappMessage = `Halo! Saya tertarik dengan produk ${product.namaProduk}. Bisakah Anda memberikan informasi lebih lanjut?`;
+  const whatsappMessage = `Halo! Saya tertarik dengan produk ${productName}. Bisakah Anda memberikan informasi lebih lanjut?`;
   const whatsappUrl = resellerWhatsappNumber 
     ? `https://wa.me/${resellerWhatsappNumber.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(whatsappMessage)}`
     : '#';
@@ -61,7 +63,7 @@ function ProductCard({ product, displayPrice, resellerWhatsappNumber, resellerId
             <div className="relative w-32 h-32 rounded-xl overflow-hidden shadow-md">
               <Image
                 src={product.gambar}
-                alt={product.namaProduk}
+                alt={productName}
                 fill
                 className="object-cover group-hover:scale-105 transition-transform duration-200"
                 sizes="128px"
@@ -82,7 +84,7 @@ function ProductCard({ product, displayPrice, resellerWhatsappNumber, resellerId
                 href={`/produk/${slug}`}
                 className="hover:text-brand-600 transition-colors"
               >
-                {product.namaProduk}
+                {productName}
               </a>
             </h3>
             
@@ -124,7 +126,7 @@ function ProductCard({ product, displayPrice, resellerWhatsappNumber, resellerId
                   href={trackingUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  aria-label={`Beli ${product.namaProduk} via WhatsApp`}
+                  aria-label={`Beli ${productName} via WhatsApp`}
                   className="w-full px-4 py-2 bg-green-500 text-white text-sm font-medium rounded-lg hover:bg-green-600 transition-colors text-center flex items-center justify-center gap-2"
                 >
                   <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
@@ -156,6 +158,56 @@ export default async function ResellerProfilePage({ params }: ResellerPageProps)
 
   const { reseller, products, customPrices } = profile;
 
+  // Helper: prefer non-Clerk images (blob/storage) over img.clerk.com when available
+  const pickProfileImage = (r: any) => {
+    const candidates = [
+      r?.profile?.photo_url ?? r?.profile?.photoUrl ?? null,
+      r?.fotoProfil ?? null,
+    ].filter(Boolean).map(String);
+    if (candidates.length === 0) return null;
+    // prefer non-clerk hostnames
+    const nonClerk = candidates.find((u: string) => {
+      try {
+        const h = new URL(u).hostname;
+        return !/clerk\.com$/.test(h) && !h.includes('clerk.com');
+      } catch {
+        return true;
+      }
+    });
+    return nonClerk ?? candidates[0];
+  };
+
+  const profileImage = pickProfileImage(reseller);
+
+  // Prefer non-Clerk hosted profile images (blob) over Clerk avatars.
+  const getPreferredPhoto = (r: any) => {
+    const candidates = [
+      r?.profile?.photo_url,
+      r?.fotoProfil,
+      r?.profile?.photoUrl,
+      r?.photo_url,
+    ];
+
+    let clerkCandidate: string | null = null;
+    for (const c of candidates) {
+      if (!c) continue;
+      try {
+        const h = new URL(String(c)).hostname || '';
+        if (h.includes('clerk.com')) {
+          clerkCandidate = String(c);
+          continue;
+        }
+        return String(c);
+      } catch (e) {
+        // ignore invalid urls
+        continue;
+      }
+    }
+    return clerkCandidate;
+  };
+
+  const profilePhotoUrl = getPreferredPhoto(reseller);
+
   return (
     <div className="min-h-screen">
       {/* Header Profil / Hero Section */}
@@ -164,11 +216,11 @@ export default async function ResellerProfilePage({ params }: ResellerPageProps)
           <div className="flex flex-col md:flex-row items-center gap-8">
             {/* Foto Profil */}
             <div className="relative">
-              {reseller.profile?.photoUrl ? (
+              {profileImage ? (
                 <div className="relative w-32 h-32 md:w-40 md:h-40 rounded-full overflow-hidden border-4 border-white/20 shadow-xl">
                   <Image
-                    src={reseller.profile.photoUrl}
-                    alt={reseller.namaReseller}
+                    src={String(profileImage)}
+                    alt={reseller.namaReseller ?? reseller.profile?.displayName ?? reseller.apiResellerId}
                     fill
                     className="object-cover"
                     priority
@@ -194,11 +246,21 @@ export default async function ResellerProfilePage({ params }: ResellerPageProps)
             {/* Info Profil */}
             <div className="flex-1 text-center md:text-left">
               <h1 className="text-3xl md:text-4xl font-bold mb-2">
-                {reseller.namaReseller}
+                {reseller.namaReseller ?? reseller.profile?.displayName ?? reseller.apiResellerId}
               </h1>
               <p className="text-xl text-white/90 mb-4">
                 📍 {reseller.area}
               </p>
+              {/* Full Address */}
+              {(reseller.profile?.alamat || reseller.profile?.provinsi || reseller.profile?.kabupaten || reseller.profile?.kecamatan) && (
+                <p className="text-sm text-white/90 mb-4">
+                  <strong>Alamat:</strong>{' '}
+                  {reseller.profile?.alamat ? String(reseller.profile.alamat) + ', ' : ''}
+                  {reseller.profile?.kecamatan ? String(reseller.profile.kecamatan) + ', ' : ''}
+                  {reseller.profile?.kabupaten ? String(reseller.profile.kabupaten) + ', ' : ''}
+                  {reseller.profile?.provinsi ? String(reseller.profile.provinsi) : ''}
+                </p>
+              )}
               <p className="text-white/80 mb-6">
                 Reseller terpercaya DRW Skincare dengan level <strong>{reseller.level}</strong>
               </p>
@@ -207,7 +269,7 @@ export default async function ResellerProfilePage({ params }: ResellerPageProps)
               <div className="flex items-center justify-center md:justify-start gap-4">
                 {reseller.profile?.facebook && (
                   <a 
-                    href={reseller.profile.facebook}
+                    href={String(reseller.profile.facebook)}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center hover:bg-white/30 transition-colors"
@@ -220,7 +282,7 @@ export default async function ResellerProfilePage({ params }: ResellerPageProps)
                 
                 {reseller.profile?.instagram && (
                   <a 
-                    href={reseller.profile.instagram}
+                    href={String(reseller.profile.instagram)}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center hover:bg-white/30 transition-colors"
@@ -229,6 +291,13 @@ export default async function ResellerProfilePage({ params }: ResellerPageProps)
                       <path d="M12.017 0C5.396 0 .029 5.367.029 11.987c0 6.618 5.367 11.986 11.988 11.986s11.987-5.368 11.987-11.986C24.014 5.367 18.635.001 12.017.001zM8.449 16.988c-1.297 0-2.448-.565-3.252-1.453-.804-.888-1.297-2.08-1.297-3.378 0-1.297.493-2.489 1.297-3.377.804-.888 1.955-1.453 3.252-1.453s2.448.565 3.252 1.453c.804.888 1.297 2.08 1.297 3.377 0 1.298-.493 2.49-1.297 3.378-.804.888-1.955 1.453-3.252 1.453zm7.718 0c-1.297 0-2.448-.565-3.252-1.453-.804-.888-1.297-2.08-1.297-3.378 0-1.297.493-2.489 1.297-3.377.804-.888 1.955-1.453 3.252-1.453s2.448.565 3.252 1.453c.804.888 1.297 2.08 1.297 3.377 0 1.298-.493 2.49-1.297 3.378-.804.888-1.955 1.453-3.252 1.453z"/>
                     </svg>
                   </a>
+                )}
+                {/* Bank info */}
+                { (reseller.profile?.bank || reseller.profile?.rekening) && (
+                  <div className="ml-2 text-white/90 text-sm px-3 py-2 rounded-lg bg-white/10">
+                    {reseller.profile?.bank && (<div><strong>Bank:</strong> {reseller.profile.bank}</div>)}
+                    {reseller.profile?.rekening && (<div><strong>Rek:</strong> {reseller.profile.rekening}</div>)}
+                  </div>
                 )}
               </div>
             </div>

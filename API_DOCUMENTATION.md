@@ -43,6 +43,19 @@
 - **Method:** GET
 - **Description:** Mengambil reseller dari database.
 
+### 5. Reseller (App-level)
+- **URL:** `/api/resellers/find-by-phone`
+- **Method:** POST
+- **Description:** Temukan reseller berdasarkan nomor telepon. Body: { nomorHp }
+
+- **URL:** `/api/resellers/link-account`
+- **Method:** POST
+- **Description:** Link reseller DB record ke akun Clerk saat onboarding. Protected — expects authenticated user. Body: { resellerId, nama_reseller, whatsapp_number, photo_url }
+
+- **URL:** `/api/resellers/me`
+- **Method:** GET / PUT
+- **Description:** GET returns the current user's linked reseller + profile; PUT upserts the `ResellerProfile` for the authenticated user. PUT expects snake_case fields: `nama_reseller`, `city`, `whatsapp_number`, `bio`, `photo_url`, `facebook`, `instagram`.
+
 ### 5. Sync Data
 - **URL:** `/api/sync-data`
 - **Method:** POST
