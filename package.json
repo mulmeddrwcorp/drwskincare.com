@@ -9,10 +9,12 @@
     "react-dom": "^19.1.1"
   },
   "scripts": {
-  "dev": "next dev",
-  "build": "prisma generate && next build",
-  "start": "next start",
-  "postinstall": "prisma generate"
+    "dev": "next dev",
+    "build": "prisma generate && next build",
+    "start": "next start",
+    "postinstall": "prisma generate",
+    "check:artifacts": "node ./scripts/check-artifacts.js",
+    "ci": "npm run check:artifacts && npm run build"
   },
   "devDependencies": {
     "@types/node": "24.2.1",
